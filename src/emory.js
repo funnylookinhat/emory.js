@@ -4,17 +4,17 @@
 
 $(function () {
 
-  $(document).on('click', '[data-form-click-submit]', function (e) {
+  $(document).on('click', '[emory-form-click-submit]', function (e) {
     e.preventDefault();
     handleFormSubmit($(this));
   });
 
-  $(document).on('change', '[data-form-change-submit]', function (e) {
+  $(document).on('change', '[emory-form-change-submit]', function (e) {
     e.preventDefault();
     handleFormSubmit($(this));
   });
 
-  $(document).on('keydown', '[data-form-enter-submit]', function (e) {
+  $(document).on('keydown', '[emory-form-enter-submit]', function (e) {
     var code = e.keyCode || e.which;
     if( code == 13 ) {
       handleFormSubmit($(this));
@@ -26,19 +26,19 @@ $(function () {
     setupFormTimeouts();
   }, 5000);
 
-  $('[data-form-onload-submit]').each(function () {
+  $('[emory-form-onload-submit]').each(function () {
     var $form = $(this);
     
     $loadingTarget = false;
-    if( $form.attr('data-form-loading-target') ) {
-      $loadingTarget = $($form.attr('data-form-result-target'));
+    if( $form.attr('emory-form-loading-target') ) {
+      $loadingTarget = $($form.attr('emory-form-result-target'));
     } else {
       $loadingTarget = $form.parent();
     }
 
     $loadingTarget.addClass('loading');
     
-    if( $form.is('[data-form-ajax]') ) {
+    if( $form.is('[emory-form-ajax]') ) {
       submitFormAjax($form);
     } else {
       $form.submit();
@@ -46,23 +46,23 @@ $(function () {
   });
 
   function setupFormTimeouts() {
-    $('[data-form-timeout-submit]').each(function () {
+    $('[emory-form-timeout-submit]').each(function () {
       var $form = $(this);
 
-      if( $form.attr('[data-form-onload-submit]') &&
-          $form.attr('[data-form-onload-submit]').length ) {
+      if( $form.attr('[emory-form-onload-submit]') &&
+          $form.attr('[emory-form-onload-submit]').length ) {
         return;
       }
 
-      var timeoutMillis = $form.attr('data-form-timeout-submit');
-      $form.removeAttr('data-form-timeout-submit');
+      var timeoutMillis = $form.attr('emory-form-timeout-submit');
+      $form.removeAttr('emory-form-timeout-submit');
 
       if( ! timeoutMillis.length ) {
         return;
       }
 
       var timeoutFormId = ''+Math.floor(Math.random() * 999999999)+''+Date.now();
-      $form.attr('data-form-timeout-id',timeoutFormId);
+      $form.attr('emory-form-timeout-id',timeoutFormId);
 
       setTimeout(function () {
         timeoutFormSubmit(timeoutFormId);
@@ -71,36 +71,36 @@ $(function () {
   }
 
   function timeoutFormSubmit(timeoutId) {
-    var $form = $('[data-form-timeout-id="'+timeoutId+'"]');
+    var $form = $('[emory-form-timeout-id="'+timeoutId+'"]');
     if( ! $form.length ) {
       return;
     }
 
-    if( $form.attr('data-form-timeout-submit-input-name') &&
-        $form.attr('data-form-timeout-submit-input-value') ) {
+    if( $form.attr('emory-form-timeout-submit-input-name') &&
+        $form.attr('emory-form-timeout-submit-input-value') ) {
       $form
-        .find('input[name="'+$form.attr('data-form-timeout-submit-input-name')+'"]')
-        .val($form.attr('data-form-timeout-submit-input-value'));
+        .find('input[name="'+$form.attr('emory-form-timeout-submit-input-name')+'"]')
+        .val($form.attr('emory-form-timeout-submit-input-value'));
     }
 
-    if( $form.attr('data-form-timeout-submit-action') ) {
-      $form.attr('action', $form.attr('data-form-timeout-submit-action'));
+    if( $form.attr('emory-form-timeout-submit-action') ) {
+      $form.attr('action', $form.attr('emory-form-timeout-submit-action'));
 
-      if( $form.attr('data-form-timeout-submit-action-fallback') ) {
-        $form.attr('action-fallback', $actor.attr('data-form-timeout-submit-action-fallback'));
+      if( $form.attr('emory-form-timeout-submit-action-fallback') ) {
+        $form.attr('action-fallback', $actor.attr('emory-form-timeout-submit-action-fallback'));
       }
     }
 
     $loadingTarget = false;
-    if( $form.attr('data-form-loading-target') ) {
-      $loadingTarget = $($form.attr('data-form-result-target'));
+    if( $form.attr('emory-form-loading-target') ) {
+      $loadingTarget = $($form.attr('emory-form-result-target'));
     } else {
       $loadingTarget = $form.parent();
     }
 
     $loadingTarget.addClass('loading');
     
-    if( $form.is('[data-form-ajax]') ) {
+    if( $form.is('[emory-form-ajax]') ) {
       submitFormAjax($form);
     } else {
       $form.submit();
@@ -110,31 +110,31 @@ $(function () {
   function handleFormSubmit($actor) {
     $form = $actor.closest('form');
 
-    if( $actor.attr('data-form-submit-input-name') &&
-        $actor.attr('data-form-submit-input-value') ) {
+    if( $actor.attr('emory-form-submit-input-name') &&
+        $actor.attr('emory-form-submit-input-value') ) {
       $form
-        .find('input[name="'+$actor.attr('data-form-submit-input-name')+'"]')
-        .val($actor.attr('data-form-submit-input-value'));
+        .find('input[name="'+$actor.attr('emory-form-submit-input-name')+'"]')
+        .val($actor.attr('emory-form-submit-input-value'));
     }
 
-    if( $actor.attr('data-form-submit-action') ) {
-      $form.attr('action', $actor.attr('data-form-submit-action'));
+    if( $actor.attr('emory-form-submit-action') ) {
+      $form.attr('action', $actor.attr('emory-form-submit-action'));
 
-      if( $actor.attr('data-form-submit-action-fallback') ) {
-        $form.attr('action-fallback', $actor.attr('data-form-submit-action-fallback'));
+      if( $actor.attr('emory-form-submit-action-fallback') ) {
+        $form.attr('action-fallback', $actor.attr('emory-form-submit-action-fallback'));
       }
     }
 
     $loadingTarget = false;
-    if( $form.attr('data-form-loading-target') ) {
-      $loadingTarget = $($form.attr('data-form-result-target'));
+    if( $form.attr('emory-form-loading-target') ) {
+      $loadingTarget = $($form.attr('emory-form-result-target'));
     } else {
       $loadingTarget = $form.parent();
     }
 
     $loadingTarget.addClass('loading');
     
-    if( $form.is('[data-form-ajax]') ) {
+    if( $form.is('[emory-form-ajax]') ) {
       submitFormAjax($form);
     } else {
       $form.submit();
@@ -143,13 +143,13 @@ $(function () {
 
   function submitFormAjax ($form) {
     $resultTarget = false;
-    if( $form.attr('data-form-result-target') ) {
-      $resultTarget = $($form.attr('data-form-result-target'));
+    if( $form.attr('emory-form-result-target') ) {
+      $resultTarget = $($form.attr('emory-form-result-target'));
     } else {
       $resultTarget = $form.parent();
     }
 
-    formRemoveAllAlerts($resultTarget, $form.attr('data-form-transition'));
+    formRemoveAllAlerts($resultTarget, $form.attr('emory-form-transition'));
 
     if( $form.find('input[type="file"]').length ) {
       
@@ -200,12 +200,12 @@ $(function () {
   function submitFormAjaxFileFallback ($form) {
     if( ! $form.attr('action-fallback') ) {
       $resultTarget = false;
-      if( $form.attr('data-form-result-target') ) {
-        $resultTarget = $($form.attr('data-form-result-target'));
+      if( $form.attr('emory-form-result-target') ) {
+        $resultTarget = $($form.attr('emory-form-result-target'));
       } else {
         $resultTarget = $form.parent();
       }
-      return formAddAlert($resultTarget, 'Error: missing fallback request target.  Please contact support.', 'error', $form.attr('data-form-transition'));
+      return formAddAlert($resultTarget, 'Error: missing fallback request target.  Please contact support.', 'error', $form.attr('emory-form-transition'));
     }
 
     $form.attr('action', $form.attr('action-fallback'));
@@ -270,54 +270,54 @@ $(function () {
       return;
     }
 
-    if( $form.attr('data-form-loading-target') ) {
-      $loadingTarget = $($form.attr('data-form-result-target'));
+    if( $form.attr('emory-form-loading-target') ) {
+      $loadingTarget = $($form.attr('emory-form-result-target'));
     } else {
       $loadingTarget = $form.parent();
     }
     $loadingTarget.removeClass('loading');
 
     $resultTarget = false;
-    if( $form.attr('data-form-result-target') ) {
-      $resultTarget = $($form.attr('data-form-result-target'));
+    if( $form.attr('emory-form-result-target') ) {
+      $resultTarget = $($form.attr('emory-form-result-target'));
     } else {
       $resultTarget = $form.parent();
     }
 
     if( ! response.success ) {
-      return formAddAlert($resultTarget, response.error, 'error', $form.attr('data-form-transition'));
+      return formAddAlert($resultTarget, response.error, 'error', $form.attr('emory-form-transition'));
     }
 
     return ajaxSuccessPreHide(response, $form);
   }
 
   function handleFormAjaxError(response, message, error, $form) {
-    if( $form.attr('data-form-loading-target') ) {
-      $loadingTarget = $($form.attr('data-form-result-target'));
+    if( $form.attr('emory-form-loading-target') ) {
+      $loadingTarget = $($form.attr('emory-form-result-target'));
     } else {
       $loadingTarget = $form.parent();
     }
     $loadingTarget.removeClass('loading');
 
     $resultTarget = false;
-    if( $form.attr('data-form-result-target') ) {
-      $resultTarget = $($form.attr('data-form-result-target'));
+    if( $form.attr('emory-form-result-target') ) {
+      $resultTarget = $($form.attr('emory-form-result-target'));
     } else {
       $resultTarget = $form.parent();
     }
 
     // Consider removing this after testing.
-    return formAddAlert($resultTarget, 'Request error: '+message, 'info', $form.attr('data-form-transition'));
+    return formAddAlert($resultTarget, 'Request error: '+message, 'info', $form.attr('emory-form-transition'));
   }
 
   function ajaxSuccessPreHide(response, $form) {
-    if( ! $form.attr('data-form-ajax-success-pre-hide-target') ) {
+    if( ! $form.attr('emory-form-ajax-success-pre-hide-target') ) {
       return ajaxSuccessPreShow(response, $form);
     }
 
     formHideTarget(
-      $($form.attr('data-form-ajax-success-pre-hide-target')), 
-      $form.attr('data-form-transition'), 
+      $($form.attr('emory-form-ajax-success-pre-hide-target')), 
+      $form.attr('emory-form-transition'), 
       function () {
         return ajaxSuccessPreShow(response, $form);
       }
@@ -325,13 +325,13 @@ $(function () {
   }
 
   function ajaxSuccessPreShow(response, $form) {
-    if( ! $form.attr('data-form-ajax-success-pre-show-target') ) {
+    if( ! $form.attr('emory-form-ajax-success-pre-show-target') ) {
       return ajaxSuccessLoadViews(response, $form);
     }
 
     formShowTarget(
-      $($form.attr('data-form-ajax-success-pre-show-target')), 
-      $form.attr('data-form-transition'), 
+      $($form.attr('emory-form-ajax-success-pre-show-target')), 
+      $form.attr('emory-form-transition'), 
       function () {
         return ajaxSuccessLoadViews(response, $form);
       }
@@ -343,12 +343,12 @@ $(function () {
 
     if( response.message ) {
       $resultTarget = false;
-      if( $form.attr('data-form-result-target') ) {
-        $resultTarget = $($form.attr('data-form-result-target'));
+      if( $form.attr('emory-form-result-target') ) {
+        $resultTarget = $($form.attr('emory-form-result-target'));
       } else {
         $resultTarget = $form.parent();
       }
-      formAddAlert($resultTarget, response.message, 'success', $form.attr('data-form-transition'));
+      formAddAlert($resultTarget, response.message, 'success', $form.attr('emory-form-transition'));
     }
 
     // Loop other views.
@@ -357,32 +357,32 @@ $(function () {
       $newView.hide();
       $slideDownQueue.add($newView);
 
-      if( $form.attr('data-form-ajax-success-view-'+viewIndex+'-replace-target') ) {
-        $oldView = $($form.attr('data-form-ajax-success-view-'+viewIndex+'-replace-target'));
+      if( $form.attr('emory-form-ajax-success-view-'+viewIndex+'-replace-target') ) {
+        $oldView = $($form.attr('emory-form-ajax-success-view-'+viewIndex+'-replace-target'));
         $oldView.after($newView);
         $oldView.remove();
       } else {
-        if( $form.attr('data-form-ajax-success-view-'+viewIndex+'-prepend-target') ) {
-          $target = $($form.attr('data-form-ajax-success-view-'+viewIndex+'-prepend-target'));
+        if( $form.attr('emory-form-ajax-success-view-'+viewIndex+'-prepend-target') ) {
+          $target = $($form.attr('emory-form-ajax-success-view-'+viewIndex+'-prepend-target'));
           $target.prepend($newView);
-        } else if( $form.attr('data-form-ajax-success-view-'+viewIndex+'-append-target') ) {
-          $target = $($form.attr('data-form-ajax-success-view-'+viewIndex+'-append-target'));
+        } else if( $form.attr('emory-form-ajax-success-view-'+viewIndex+'-append-target') ) {
+          $target = $($form.attr('emory-form-ajax-success-view-'+viewIndex+'-append-target'));
           $target.append($newView);
         }
       }
 
-      if( $form.attr('data-form-ajax-success-view-'+viewIndex+'-fire-event') ) {
+      if( $form.attr('emory-form-ajax-success-view-'+viewIndex+'-fire-event') ) {
         formShowTarget(
           $newView, 
-          $form.attr('data-form-transition'), 
+          $form.attr('emory-form-transition'), 
           function () {
-            $newView.trigger($form.attr('data-form-ajax-success-view-'+viewIndex+'-fire-event'));
+            $newView.trigger($form.attr('emory-form-ajax-success-view-'+viewIndex+'-fire-event'));
           }
         );
       } else {
         formShowTarget(
           $newView, 
-          $form.attr('data-form-transition')
+          $form.attr('emory-form-transition')
         );
       }
     }
@@ -393,7 +393,7 @@ $(function () {
 
     formShowTarget(
       $slideDownQueue, 
-      $form.attr('data-form-transition'), 
+      $form.attr('emory-form-transition'), 
       function () {
         ajaxSuccessPostHide(response, $form);
       }
@@ -401,13 +401,13 @@ $(function () {
   }
 
   function ajaxSuccessPostHide(response, $form) {
-    if( ! $form.attr('data-form-ajax-success-post-hide-target') ) {
+    if( ! $form.attr('emory-form-ajax-success-post-hide-target') ) {
       return ajaxSuccessPostShow(response, $form);
     }
 
     formHideTarget(
-      $($form.attr('data-form-ajax-success-post-hide-target')), 
-      $form.attr('data-form-transition'), 
+      $($form.attr('emory-form-ajax-success-post-hide-target')), 
+      $form.attr('emory-form-transition'), 
       function () {
         return ajaxSuccessPostShow(response, $form);
       }
@@ -415,13 +415,13 @@ $(function () {
   }
 
   function ajaxSuccessPostShow(response, $form) {
-    if( ! $form.attr('data-form-ajax-success-post-show-target') ) {
+    if( ! $form.attr('emory-form-ajax-success-post-show-target') ) {
       return ajaxSuccessCallback(response, $form);
     }
 
     formShowTarget(
-      $($form.attr('data-form-ajax-success-post-show-target')), 
-      $form.attr('data-form-transition'), 
+      $($form.attr('emory-form-ajax-success-post-show-target')), 
+      $form.attr('emory-form-transition'), 
       function () {
         return ajaxSuccessCallback(response, $form);
       }
@@ -429,11 +429,11 @@ $(function () {
   }
 
   function ajaxSuccessCallback(response, $form) {
-    if( ! $form.attr('data-form-ajax-success-callback') ) {
+    if( ! $form.attr('emory-form-ajax-success-callback') ) {
       return;
     }
 
-    window[$form.attr('data-form-ajax-success-callback')](response, $form);
+    window[$form.attr('emory-form-ajax-success-callback')](response, $form);
 
     return;
   }
