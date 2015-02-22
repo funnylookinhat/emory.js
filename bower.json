@@ -1,0 +1,17 @@
+{
+  "name": "emory.js",
+  "version": "0.0.1",
+  "homepage": "https://github.com/funnylookinhat/emory.js",
+  "authors": [
+    "David Overcash <funnylookinhat@gmail.com>"
+  ],
+  "description": "A pattern and engine for easily handling AJAX form submissions.",
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
