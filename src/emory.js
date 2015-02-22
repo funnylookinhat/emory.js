@@ -22,6 +22,10 @@ $(function () {
     }
   });
 
+  $(document).on('valid.fndtn.abide', '[emory-form-abide-submit]', function (e) {
+    handleFormSubmit($(this));
+  });
+
   setInterval(function () {
     setupFormTimeouts();
   }, 5000);
@@ -36,7 +40,7 @@ $(function () {
       $loadingTarget = $form.parent();
     }
 
-    $loadingTarget.addClass('loading');
+    $loadingTarget.addClass('emory-loading');
     
     if( $form.is('[emory-form-ajax]') ) {
       submitFormAjax($form);
@@ -98,7 +102,7 @@ $(function () {
       $loadingTarget = $form.parent();
     }
 
-    $loadingTarget.addClass('loading');
+    $loadingTarget.addClass('emory-loading');
     
     if( $form.is('[emory-form-ajax]') ) {
       submitFormAjax($form);
@@ -132,7 +136,7 @@ $(function () {
       $loadingTarget = $form.parent();
     }
 
-    $loadingTarget.addClass('loading');
+    $loadingTarget.addClass('emory-loading');
     
     if( $form.is('[emory-form-ajax]') ) {
       submitFormAjax($form);
@@ -275,7 +279,7 @@ $(function () {
     } else {
       $loadingTarget = $form.parent();
     }
-    $loadingTarget.removeClass('loading');
+    $loadingTarget.removeClass('emory-loading');
 
     $resultTarget = false;
     if( $form.attr('emory-form-result-target') ) {
@@ -297,7 +301,7 @@ $(function () {
     } else {
       $loadingTarget = $form.parent();
     }
-    $loadingTarget.removeClass('loading');
+    $loadingTarget.removeClass('emory-loading');
 
     $resultTarget = false;
     if( $form.attr('emory-form-result-target') ) {
