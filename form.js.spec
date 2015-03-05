@@ -39,5 +39,7 @@ __<input>__ or __<a>__
 - emory-form-submit-fallback-action
 - emory-form-submit-input-name
 - emory-form-submit-input-value
+- emory-form-submit-ajax -> Set the form to emory-form-ajax
+- emory-form-submit-normal -> Set the form to NOT emory-form-ajax ( If both present, will use ajax )
 
 

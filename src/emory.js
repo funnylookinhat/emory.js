@@ -129,6 +129,15 @@ $(function () {
       }
     }
 
+    if( $actor.is('[emory-form-submit-ajax]') &&
+        ! $form.is('[emory-form-ajax]') ) {
+      $form.attr('emory-form-ajax','true');
+    }
+    else if( $actor.is('[emory-form-submit-normal]') &&
+             $form.is('[emory-form-ajax]') ) {
+      $form.removeAttr('emory-form-ajax');
+    }
+
     $loadingTarget = false;
     if( $form.attr('emory-form-loading-target') ) {
       $loadingTarget = $($form.attr('emory-form-result-target'));
