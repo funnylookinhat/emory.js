@@ -177,7 +177,7 @@ $(function () {
     // $form.serialize() is a piece.
     var formData = {};
 
-    $form.find('input:not(type="checkbox"):not(type="radio"), select, textarea').each(function () {
+    $form.find('input:not([type="checkbox"]):not([type="radio"]), select, textarea').each(function () {
       formData[$(this).attr('name')] = $(this).val();
     });
 
@@ -232,7 +232,7 @@ $(function () {
     var formData = new FormData();
     formData.append('MAX_FILE_SIZE', '25000000');
 
-    $form.find('input:not(type="checkbox"):not(type="radio"):not(type="file"), select, textarea').each(function () {
+    $form.find('input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), select, textarea').each(function () {
       formData.append($(this).attr('name'), $(this).val());
     });
 
