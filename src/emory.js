@@ -177,7 +177,7 @@ $(function () {
     // $form.serialize() is a piece.
     var formData = {};
 
-    $form.find('input[type="hidden"], input[type="text"], input[type="password"], input[type="date"], input[type="datetime"], input[type="datetime-local"], input[type="month"], input[type="week"], input[type="email"], input[type="number"], input[type="search"], input[type="tel"], input[type="time"], input[type="url"], select, textarea').each(function () {
+    $form.find('input:not(type="checkbox"):not(type="radio"), select, textarea').each(function () {
       formData[$(this).attr('name')] = $(this).val();
     });
 
@@ -232,12 +232,12 @@ $(function () {
     var formData = new FormData();
     formData.append('MAX_FILE_SIZE', '25000000');
 
-    $form.find('input[type="hidden"], input[type="text"], input[type="password"], input[type="date"], input[type="datetime"], input[type="datetime-local"], input[type="month"], input[type="week"], input[type="email"], input[type="number"], input[type="search"], input[type="tel"], input[type="time"], input[type="url"], select, textarea').each(function () {
+    $form.find('input:not(type="checkbox"):not(type="radio"):not(type="file"), select, textarea').each(function () {
       formData.append($(this).attr('name'), $(this).val());
     });
 
     var checkboxValues = {};
-    $form.find('input[type="checkbox"]').each(function () {
+    $form.find('input[type="checkbox"], input[type="radio"]').each(function () {
       if( $(this).is(':checked') ) {
         if( ! checkboxValues[$(this).attr('name')] ) {
           checkboxValues[$(this).attr('name')] = $(this).val();
