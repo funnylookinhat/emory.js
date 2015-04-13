@@ -97,7 +97,7 @@ $(function () {
 
     $loadingTarget = false;
     if( $form.attr('emory-form-loading-target') ) {
-      $loadingTarget = $($form.attr('emory-form-result-target'));
+      $loadingTarget = $($form.attr('emory-form-loading-target'));
     } else {
       $loadingTarget = $form.parent();
     }
@@ -140,7 +140,7 @@ $(function () {
 
     $loadingTarget = false;
     if( $form.attr('emory-form-loading-target') ) {
-      $loadingTarget = $($form.attr('emory-form-result-target'));
+      $loadingTarget = $($form.attr('emory-form-loading-target'));
     } else {
       $loadingTarget = $form.parent();
     }
@@ -284,7 +284,7 @@ $(function () {
     }
 
     if( $form.attr('emory-form-loading-target') ) {
-      $loadingTarget = $($form.attr('emory-form-result-target'));
+      $loadingTarget = $($form.attr('emory-form-loading-target'));
     } else {
       $loadingTarget = $form.parent();
     }
@@ -306,7 +306,7 @@ $(function () {
 
   function handleFormAjaxError(response, message, error, $form) {
     if( $form.attr('emory-form-loading-target') ) {
-      $loadingTarget = $($form.attr('emory-form-result-target'));
+      $loadingTarget = $($form.attr('emory-form-loading-target'));
     } else {
       $loadingTarget = $form.parent();
     }
