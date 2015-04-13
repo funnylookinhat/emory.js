@@ -35,7 +35,7 @@ $(function () {
     
     $loadingTarget = false;
     if( $form.attr('emory-form-loading-target') ) {
-      $loadingTarget = $($form.attr('emory-form-result-target'));
+      $loadingTarget = $($form.attr('emory-form-loading-target'));
     } else {
       $loadingTarget = $form.parent();
     }
