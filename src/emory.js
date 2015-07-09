@@ -1,520 +1,697 @@
-/**
- * Generic Form Handling through Element Attributes
- */
+var Emory = function (params) {
+  if( ! params ) {
+    params = {};
+  }
 
-$(function () {
+  this._attributePrefix = typeof params.attributePrefix === "string" 
+                        ? params.attributePrefix
+                        : this.constructor.__attributePrefix;
 
-  $(document).on('click', '[emory-form-click-submit]', function (e) {
-    e.preventDefault();
-    handleFormSubmit($(this));
-  });
+  this._checkResponseSuccess = typeof params.checkResponseSuccess === "function" 
+                     ? params.checkResponseSuccess
+                     : this.constructor.__checkResponseSuccess;
 
-  $(document).on('change', '[emory-form-change-submit]', function (e) {
-    e.preventDefault();
-    handleFormSubmit($(this));
-  });
+  this._getResponseErrorString = typeof params.getResponseErrorString === "function"
+                         ? params.getResponseErrorString
+                         : this.constructor.__getResponseErrorString;
 
-  $(document).on('keydown', '[emory-form-enter-submit]', function (e) {
-    var code = e.keyCode || e.which;
-    if( code == 13 ) {
-      handleFormSubmit($(this));
-      return false;
+  this._getResponseViewHtml = typeof params.getResponseViewHtml === "function"
+                            ? params.getResponseViewHtml
+                            : this.constructor.__getResponseViewHtml;
+
+  this._generateAlertHtml = typeof params.generateAlertHtml === "function" 
+                           ? params.generateAlertHtml
+                           : this.constructor.__generateAlertHtml;
+
+  this._getResponseCallbackUrl = typeof params.getResponseCallbackUrl === "function" 
+                               ? params.getResponseCallbackUrl 
+                               : this.constructor.__getResponseCallbackUrl;
+
+  this._init();
+}
+
+// Default Values / Functions 
+
+Emory.__attributePrefix = "emory-";
+
+Emory.__checkResponseSuccess = function (response) {
+  if( typeof response !== "undefined" &&
+      typeof response.success !== "undefined" ) {
+
+    if( response.success === true ||
+        response.success === 1 ||
+        response.success === "1" ) {
+      return true;
     }
-  });
 
-  $(document).on('valid.fndtn.abide', '[emory-form-abide-submit]', function (e) {
-    handleFormSubmit($(this));
-  });
+  }
 
-  setInterval(function () {
-    setupFormTimeouts();
-  }, 5000);
+  return false;
+}
 
-  $('[emory-form-onload-submit]').each(function () {
-    var $form = $(this);
+Emory.__getResponseErrorString = function (response) {
+  if( typeof response !== "undefined" &&
+      typeof response.error !== "undefined" ) {
+    return response.error;
+  }
+
+  return "Unknown error has occurred.";
+}
+
+Emory.__getResponseViewHtml = function (response, name) {
+  if( typeof response !== "undefined" &&
+      typeof response.data !== "undefined" &&
+      typeof response.data.views !== "undefined" ) {
+
+    if( typeof response.data.views[name] !== "undefined" ) {
+      return response.data.views[name];
+    }
+  }
+
+  return "";
+}
+
+Emory.__generateAlertHtml = function (message, type) {
+  var _emory = this;
+
+  var html = '';
+
+  html += '<div ' + _emory._attributePrefix + 'alert="" data-alert="" class="alert-box ' + type + '">';
+  html += message;
+  html += '<a href="#" class="close">×</a>';
+  html += '</div>';
+
+  return html;
+}
+
+Emory.__getResponseCallbackUrl = function (response) {
+  if( typeof response !== "undefined" &&
+      typeof response.callback_url !== "undefined" ) {
+    if( response.callback_url.length > 0 ) {
+      return response.callback_url;
+    }
+  }
+
+  return "";
+}
+
+// Couple data manipulation helpers
+
+// Ensure that a string starts with pre and ends with post
+Emory.prototype.__matchPattern = function (str, pre, post) {
+  var _emory = this;
+
+  if( str.indexOf(_emory._attributePrefix + pre) === 0 &&
+      key.substr(0, key.length - post.length) === post )
+    return true;
+
+  return false;
+}
+
+// Remove find and replace with replace - this assumes the find exists at 
+// the end of the string for efficiency.
+Emory.prototype.__replacePostfix = function (str, find, replace) {
+  return str.substr(0, str.length - find.length) + replace;
+}
+
+// Get a unique identifier surrounded by a pre and post.
+Emory.prototype.__getKey = function (str, pre, post) {
+  var _emory = this;
+
+  prefixedPre = _emory._attributePrefix + pre;
+  
+  return str.substr(prefixedPre.length, str.length - prefixedPre.length - post.length);
+}
+
+// Binding Initialization
+
+Emory.prototype._init() = function () {
+  var _emory = this;
+
+  $(document).on(
+    'click', 
+    '[' + _emory._attributePrefix + 'click-submit]', 
+    function (e) {
+      e.preventDefault();
+      _emory._handleFormSubmit($(this));
+    }
+  );
+
+  $(document).on(
+    'change', 
+    '[' + _emory._attributePrefix + 'change-submit]', 
+    function (e) {
+      e.preventDefault();
+      _emory._handleFormSubmit($(this));
+    }
+  );
+
+  $(document).on(
+    'keydown', 
+    '[' + _emory._attributePrefix + 'enter-submit]', 
+    function (e) {
+      var code = e.keyCode || e.which;
+      if( code == 13 ) {
+        _emory._handleFormSubmit($(this));
+        return false;
+      }
+    }
+  );
+
+  $(document).on(
+    'valid.fndtn.abide', 
+    '[' + _emory._attributePrefix + 'abide-submit]', 
+    function (e) {
+      _emory._handleFormSubmit($(this));
+    }
+  );
+
+  // TODO - Onload Listeners & Intervals
+  
+  // TODO - Timeout Listeners & Intervals
+}
+
+// Submission Handlers
+
+// $initiator is either a form itself OR an element within a form.
+Emory.prototype._handleFormSubmit($initiator) {
+  var _emory = this;
+
+  // Get Form
+  $form = $initiator.closest('form');
+
+  if( $initiator.prop('tagName').toLowerCase() === "form" ) {
+    $form = $initiator;
+  }
+
+  // Apply "emory-loading"
+  if( $form.attr(_emory._attributePrefix + "loading-target") ) {
+    $($form.attr(_emory._attributePrefix + "loading-target")).addClass(
+      _emory._attributePrefix + "loading"
+    );
+  }
+  
+  // Apply input key / values
+  $.each($initiator.get(0).attributes, function(i, attr){
+    var key = attr.name;
+    var value = attr.value;
     
-    $loadingTarget = false;
-    if( $form.attr('emory-form-loading-target') ) {
-      $loadingTarget = $($form.attr('emory-form-loading-target'));
-    } else {
-      $loadingTarget = $form.parent();
+    // Determine if this key matches the pattern for:
+    // emory-submit-input-____-name
+    if( _emory.__matchPattern(key, 'submit-input-', '-name') ) {
+      var valueKey = _emory.__replacePostfix(key, '-name', '-value');
+
+      // If the corresponding value-attribute exists, set the input with the 
+      // name from the first attribute to be the value from the second attribute.
+      if( typeof $initiator.attr(valueKey) !== "undefined" ) {
+        $form
+          .find('input[name="' + value + '"]')
+          .val($initiator.attr(valueKey));
+      }
+    }
+  });
+  
+  // Apply action to form.
+  if( typeof $initiator.attr(_emory._attributePrefix + "submit-action") !== "undefined" ) {
+    $form.attr('action', $initiator.attr(_emory._attributePrefix + "submit-action"));
+  }
+  
+  // Determine Normal or Ajax submission.
+  if( typeof $initiator.attr(_emory._attributePrefix + "submit-ajax") !== "undefined" ) {
+    return _emory._submitFormAjax($form);
+  }
+
+  if( typeof $initiator.attr(_emory._attributePrefix + "submit-normal") !== "undefined" ) {
+    return _emory._submitFormNormal($form);
+  }
+
+  if( typeof $form.attr(_emory._attributePrefix + "ajax") !== "undefined" ) {
+    return _emory._submitFormAjax($form);
+  }
+
+  if( typeof $form.attr(_emory._attributePrefix + "normal") !== "undefined" ) {
+    return _emory._submitFormNormal($form);
+  }
+
+  // No submission method defined, so we'll do nothing at all.
+  return;
+}
+
+Emory.prototype._submitFormNormal($form) {
+  $form.submit();
+
+  return;
+}
+
+Emory.prototype._submitFormAjax($form) {
+  var _emory = this;
+
+  if( typeof $form.attr(_emory._attributePrefix + 'ajax-target') !== "undefined" ) {
+    _emory._removeAllAlerts($form, $($form.attr(_emory._attributePrefix + 'ajax-target')));
+  }
+
+  if( $form.find('input[type="file"]').length ) {
+    
+    // If we don't support FormData we have to try to use the fallback.
+    if( ! ("FormData" in window) ) {
+      return _emory._submitFormAjaxFileFallback($form);
     }
 
-    $loadingTarget.addClass('emory-loading');
-    
-    if( $form.is('[emory-form-ajax]') ) {
-      submitFormAjax($form);
-    } else {
-      $form.submit();
+    return _emory._submitFormAjaxFile($form);
+  }
+
+  var formData = {};
+
+  $form.find('input:not([type="checkbox"]):not([type="radio"]), select, textarea').each(function () {
+    formData[$(this).attr('name')] = $(this).val();
+  });
+
+  var checkboxValues = {};
+  $form.find('input[type="checkbox"], input[type="radio"]').each(function () {
+    if( $(this).is(':checked') ) {
+      if( ! checkboxValues[$(this).attr('name')] ) {
+        checkboxValues[$(this).attr('name')] = $(this).val();
+      } else {
+        checkboxValues[$(this).attr('name')] = checkboxValues[$(this).attr('name')]+','+$(this).val();
+      }
     }
   });
 
-  function setupFormTimeouts() {
-    $('[emory-form-timeout-submit]').each(function () {
-      var $form = $(this);
-
-      if( $form.attr('[emory-form-onload-submit]') &&
-          $form.attr('[emory-form-onload-submit]').length ) {
-        return;
-      }
-
-      var timeoutMillis = $form.attr('emory-form-timeout-submit');
-      $form.removeAttr('emory-form-timeout-submit');
-
-      if( ! timeoutMillis.length ) {
-        return;
-      }
-
-      var timeoutFormId = ''+Math.floor(Math.random() * 999999999)+''+Date.now();
-      $form.attr('emory-form-timeout-id',timeoutFormId);
-
-      setTimeout(function () {
-        timeoutFormSubmit(timeoutFormId);
-      }, parseFloat(timeoutMillis));
-    });
+  for( checkboxName in checkboxValues ) {
+    formData[checkboxName] = checkboxValues[checkboxName];
   }
 
-  function timeoutFormSubmit(timeoutId) {
-    var $form = $('[emory-form-timeout-id="'+timeoutId+'"]');
-    if( ! $form.length ) {
-      return;
+  $.ajax({
+    url: $form.attr('action'),
+    type: "POST",
+    data: $.param(formData),
+    dataType: 'json',
+    success: function (response) {
+      return _emory._handleFormAjaxComplete($form, response);
+    },
+    error: function (response, message, error) {
+      return _emory._handleFormAjaxFailure($form, message);
     }
+  });
+}
 
-    if( $form.attr('emory-form-timeout-submit-input-name') &&
-        $form.attr('emory-form-timeout-submit-input-value') ) {
-      $form
-        .find('input[name="'+$form.attr('emory-form-timeout-submit-input-name')+'"]')
-        .val($form.attr('emory-form-timeout-submit-input-value'));
-    }
+Emory.prototype._submitFormAjaxFile($form) {
+  var _emory = this;
 
-    if( $form.attr('emory-form-timeout-submit-action') ) {
-      $form.attr('action', $form.attr('emory-form-timeout-submit-action'));
+  var formData = new FormData();
+  formData.append('MAX_FILE_SIZE', '2000000000');
 
-      if( $form.attr('emory-form-timeout-submit-action-fallback') ) {
-        $form.attr('action-fallback', $actor.attr('emory-form-timeout-submit-action-fallback'));
-      }
-    }
+  $form.find('input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), select, textarea').each(function () {
+    formData.append($(this).attr('name'), $(this).val());
+  });
 
-    $loadingTarget = false;
-    if( $form.attr('emory-form-loading-target') ) {
-      $loadingTarget = $($form.attr('emory-form-loading-target'));
-    } else {
-      $loadingTarget = $form.parent();
-    }
-
-    $loadingTarget.addClass('emory-loading');
-    
-    if( $form.is('[emory-form-ajax]') ) {
-      submitFormAjax($form);
-    } else {
-      $form.submit();
-    }
-  }
-
-  function handleFormSubmit($actor) {
-    $form = $actor.closest('form');
-
-    if( $actor.attr('emory-form-submit-input-name') &&
-        $actor.attr('emory-form-submit-input-value') ) {
-      $form
-        .find('input[name="'+$actor.attr('emory-form-submit-input-name')+'"]')
-        .val($actor.attr('emory-form-submit-input-value'));
-    }
-
-    if( $actor.attr('emory-form-submit-action') ) {
-      $form.attr('action', $actor.attr('emory-form-submit-action'));
-
-      if( $actor.attr('emory-form-submit-action-fallback') ) {
-        $form.attr('action-fallback', $actor.attr('emory-form-submit-action-fallback'));
-      }
-    }
-
-    if( $actor.is('[emory-form-submit-ajax]') &&
-        ! $form.is('[emory-form-ajax]') ) {
-      $form.attr('emory-form-ajax','true');
-    }
-    else if( $actor.is('[emory-form-submit-normal]') &&
-             $form.is('[emory-form-ajax]') ) {
-      $form.removeAttr('emory-form-ajax');
-    }
-
-    $loadingTarget = false;
-    if( $form.attr('emory-form-loading-target') ) {
-      $loadingTarget = $($form.attr('emory-form-loading-target'));
-    } else {
-      $loadingTarget = $form.parent();
-    }
-
-    $loadingTarget.addClass('emory-loading');
-    
-    if( $form.is('[emory-form-ajax]') ) {
-      submitFormAjax($form);
-    } else {
-      $form.submit();
-    }
-  }
-
-  function submitFormAjax ($form) {
-    $resultTarget = false;
-    if( $form.attr('emory-form-result-target') ) {
-      $resultTarget = $($form.attr('emory-form-result-target'));
-    } else {
-      $resultTarget = $form.parent();
-    }
-
-    formRemoveAllAlerts($resultTarget, $form.attr('emory-form-transition'));
-
-    if( $form.find('input[type="file"]').length ) {
-      
-      // If we don't support FormData we have to try to use the fallback.
-      if( ! ("FormData" in window) ) {
-        return submitFormAjaxFileFallback($form);
-      }
-
-      return submitFormAjaxFileFormData($form);
-    }
-
-    // $form.serialize() is a piece.
-    var formData = {};
-
-    $form.find('input:not([type="checkbox"]):not([type="radio"]), select, textarea').each(function () {
-      formData[$(this).attr('name')] = $(this).val();
-    });
-
-    var checkboxValues = {};
-    $form.find('input[type="checkbox"], input[type="radio"]').each(function () {
-      if( $(this).is(':checked') ) {
-        if( ! checkboxValues[$(this).attr('name')] ) {
-          checkboxValues[$(this).attr('name')] = $(this).val();
-        } else {
-          checkboxValues[$(this).attr('name')] = checkboxValues[$(this).attr('name')]+','+$(this).val();
-        }
-      }
-    });
-
-    for( checkboxName in checkboxValues ) {
-      formData[checkboxName] = checkboxValues[checkboxName];
-    }
-
-    $.ajax({
-      url: $form.attr('action'),
-      type: "POST",
-      data: $.param(formData),
-      dataType: 'json',
-      success: function (response) {
-        return handleFormAjaxSuccess(response, $form);
-      },
-      error: function (response, message, error) {
-        return handleFormAjaxError(response, message, error, $form);
-      }
-    });
-  }
-
-  function submitFormAjaxFileFallback ($form) {
-    if( ! $form.attr('action-fallback') ) {
-      $resultTarget = false;
-      if( $form.attr('emory-form-result-target') ) {
-        $resultTarget = $($form.attr('emory-form-result-target'));
+  var checkboxValues = {};
+  $form.find('input[type="checkbox"], input[type="radio"]').each(function () {
+    if( $(this).is(':checked') ) {
+      if( ! checkboxValues[$(this).attr('name')] ) {
+        checkboxValues[$(this).attr('name')] = $(this).val();
       } else {
-        $resultTarget = $form.parent();
+        checkboxValues[$(this).attr('name')] = checkboxValues[$(this).attr('name')]+','+$(this).val();
       }
-      return formAddAlert($resultTarget, 'Error: missing fallback request target.  Please contact support.', 'error', $form.attr('emory-form-transition'));
     }
+  });
 
-    $form.attr('action', $form.attr('action-fallback'));
-    $form.attr('enctype', 'multipart/form-data');
-    $form.prepend($('<input type="hidden" name="MAX_FILE_SIZE" value="25000000" />'));
-    $form.attr('method', 'POST');
-    $form.submit();
+  for( checkboxName in checkboxValues ) {
+    formData.append(checkboxName, checkboxValues[checkboxName]);
   }
 
-  function submitFormAjaxFileFormData ($form) {
-    var formData = new FormData();
-    formData.append('MAX_FILE_SIZE', '25000000');
+  // This does not support multi-select file inputs
+  $form.find('input[type="file"]').each(function () {
+    var fileInput = $(this).get(0);
+    formData.append($(this).attr('name'), fileInput.files[0]);
+  });
 
-    $form.find('input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), select, textarea').each(function () {
-      formData.append($(this).attr('name'), $(this).val());
-    });
-
-    var checkboxValues = {};
-    $form.find('input[type="checkbox"], input[type="radio"]').each(function () {
-      if( $(this).is(':checked') ) {
-        if( ! checkboxValues[$(this).attr('name')] ) {
-          checkboxValues[$(this).attr('name')] = $(this).val();
-        } else {
-          checkboxValues[$(this).attr('name')] = checkboxValues[$(this).attr('name')]+','+$(this).val();
-        }
-      }
-    });
-
-    for( checkboxName in checkboxValues ) {
-      formData.append(checkboxName, checkboxValues[checkboxName]);
+  $.ajax({
+    url: $form.attr('action'),
+    type: "POST",
+    data: formData,
+    processData: false,
+    contentType: false,
+    dataType: 'json',
+    success: function (response) {
+      return _emory._handleFormAjaxComplete($form, response);
+    },
+    error: function (response, message, error) {
+      return _emory._handleFormAjaxFailure($form, message);
     }
+  });
+}
 
-    // This does not support multi-select file inputs
-    $form.find('input[type="file"]').each(function () {
-      var fileInput = $(this).get(0);
-      formData.append($(this).attr('name'), fileInput.files[0]);
-    });
+Emory.prototype._submitFormAjaxFileFallback($form) {
+  var _emory = this;
 
-    $.ajax({
-      url: $form.attr('action'),
-      type: "POST",
-      data: formData,
-      processData: false,
-      contentType: false,
-      dataType: 'json',
-      success: function (response) {
-        return handleFormAjaxSuccess(response, $form);
-      },
-      error: function (response, message, error) {
-        return handleFormAjaxError(response, message, error, $form);
-      }
-    });
-  }
+  // Handle by posting to an iFrame on the page.
+  // This should only proc for IE9
+  
+  var formTargetName = _emory._attributePrefix + 'TARGET-' + Date.now();
 
-  function handleFormAjaxSuccess(response, $form) {
-    if( response.callback_url ) {
-      if( response.callback_url == window.location.href ) {
-        window.location.reload(true);
-      } else {
-        window.location.href = response.callback_url;
-      }
-      return;
-    }
+  $formTarget = $('<iframe name="'+formTargetName+'" style="width: 1px; height: 1px; position: absolute; left: -100000px; top: 1px;"></iframe>');
+  $('body').append($formTarget);
+  
+  $form.attr('target', formTargetName);
+  
+  $formTarget.load(function() {
+    var content = "{}";
 
-    if( $form.attr('emory-form-loading-target') ) {
-      $loadingTarget = $($form.attr('emory-form-loading-target'));
+    if( $formTarget.contents().find('body').length ) {
+      // If the content gets wrapped in HTML tags, then parse the JSON out of body.
+      content = $formTarget.contents().find('body').get(0).innerHTML;
     } else {
-      $loadingTarget = $form.parent();
-    }
-    $loadingTarget.removeClass('emory-loading');
-
-    $resultTarget = false;
-    if( $form.attr('emory-form-result-target') ) {
-      $resultTarget = $($form.attr('emory-form-result-target'));
-    } else {
-      $resultTarget = $form.parent();
+      // Otherwise, just parse the entire contents of the document.
+      var document = $formTarget.get(0).contentDocument;
+      var serializer = new XMLSerializer();
+      content = serializer.serializeToString(document);
     }
 
-    if( ! response.success ) {
-      return formAddAlert($resultTarget, response.error, 'error', $form.attr('emory-form-transition'));
-    }
+    $formTarget.remove();
+    $form.removeAttr('target');
 
-    return ajaxSuccessPreHide(response, $form);
-  }
+    _emory._handleFormAjaxComplete($form, JSON.parse(content))
+  });
 
-  function handleFormAjaxError(response, message, error, $form) {
-    if( $form.attr('emory-form-loading-target') ) {
-      $loadingTarget = $($form.attr('emory-form-loading-target'));
-    } else {
-      $loadingTarget = $form.parent();
-    }
-    $loadingTarget.removeClass('emory-loading');
+  $form.submit();
+}
 
-    $resultTarget = false;
-    if( $form.attr('emory-form-result-target') ) {
-      $resultTarget = $($form.attr('emory-form-result-target'));
-    } else {
-      $resultTarget = $form.parent();
-    }
+// // // // // // // // // // // // // // // // // // // 
+// Chain of functions for handling an AJAX callback.  // 
+// // // // // // // // // // // // // // // // // // // 
 
-    // Consider removing this after testing.
-    return formAddAlert($resultTarget, 'Request error: '+message, 'info', $form.attr('emory-form-transition'));
-  }
+// This is called for request failures, not REST API errors.
+Emory.prototype._handleFormAjaxFailure($form, message) {
+  var _emory = this;
 
-  function ajaxSuccessPreHide(response, $form) {
-    if( ! $form.attr('emory-form-ajax-success-pre-hide-target') ) {
-      return ajaxSuccessPreShow(response, $form);
-    }
-
-    formHideTarget(
-      $($form.attr('emory-form-ajax-success-pre-hide-target')), 
-      $form.attr('emory-form-transition'), 
-      function () {
-        return ajaxSuccessPreShow(response, $form);
-      }
+  if( $form.attr(_emory._attributePrefix + "loading-target") ) {
+    $($form.attr(_emory._attributePrefix + "loading-target")).removeClass(
+      _emory._attributePrefix + "loading"
     );
   }
 
-  function ajaxSuccessPreShow(response, $form) {
-    if( ! $form.attr('emory-form-ajax-success-pre-show-target') ) {
-      return ajaxSuccessLoadViews(response, $form);
+  return _emory._addAlert($form, message, 'error');
+}
+
+// // // // // // // // // // // // // // // // // // 
+// Any request that completes successfully starts  // 
+// here and chains the next dozen or so functions. // 
+// // // // // // // // // // // // // // // // // // 
+
+Emory.prototype._handleFormAjaxComplete($form, response) {
+  var _emory = this;
+
+  var callback_url = _emory._getResponseCallbackUrl(response);
+
+  if( callback_url.length > 0 ) {
+    if( response.callback_url == window.location.href ) {
+      window.location.reload(true);
+    } else {
+      window.location.href = response.callback_url;
     }
-
-    formShowTarget(
-      $($form.attr('emory-form-ajax-success-pre-show-target')), 
-      $form.attr('emory-form-transition'), 
-      function () {
-        return ajaxSuccessLoadViews(response, $form);
-      }
-    );
-  }
-
-  function ajaxSuccessLoadViews(response, $form) {
-    $slideDownQueue = $();
-
-    if( response.message ) {
-      $resultTarget = false;
-      if( $form.attr('emory-form-result-target') ) {
-        $resultTarget = $($form.attr('emory-form-result-target'));
-      } else {
-        $resultTarget = $form.parent();
-      }
-      formAddAlert($resultTarget, response.message, 'success', $form.attr('emory-form-transition'));
-    }
-
-    // Loop other views.
-    for( viewIndex in response.data.views ) {
-      $newView = $(response.data.views[viewIndex]);
-      $newView.hide();
-      $slideDownQueue.add($newView);
-
-      if( $form.attr('emory-form-ajax-success-view-'+viewIndex+'-replace-target') ) {
-        $oldView = $($form.attr('emory-form-ajax-success-view-'+viewIndex+'-replace-target'));
-        $oldView.after($newView);
-        $oldView.remove();
-      } else {
-        if( $form.attr('emory-form-ajax-success-view-'+viewIndex+'-prepend-target') ) {
-          $target = $($form.attr('emory-form-ajax-success-view-'+viewIndex+'-prepend-target'));
-          $target.prepend($newView);
-        } else if( $form.attr('emory-form-ajax-success-view-'+viewIndex+'-append-target') ) {
-          $target = $($form.attr('emory-form-ajax-success-view-'+viewIndex+'-append-target'));
-          $target.append($newView);
-        }
-      }
-
-      if( $form.attr('emory-form-ajax-success-view-'+viewIndex+'-fire-event') ) {
-        formShowTarget(
-          $newView, 
-          $form.attr('emory-form-transition'), 
-          function () {
-            $newView.trigger($form.attr('emory-form-ajax-success-view-'+viewIndex+'-fire-event'));
-          }
-        );
-      } else {
-        formShowTarget(
-          $newView, 
-          $form.attr('emory-form-transition')
-        );
-      }
-    }
-
-    if( ! $slideDownQueue.length ) {
-      return ajaxSuccessPostHide(response, $form);
-    }
-
-    formShowTarget(
-      $slideDownQueue, 
-      $form.attr('emory-form-transition'), 
-      function () {
-        ajaxSuccessPostHide(response, $form);
-      }
-    );
-  }
-
-  function ajaxSuccessPostHide(response, $form) {
-    if( ! $form.attr('emory-form-ajax-success-post-hide-target') ) {
-      return ajaxSuccessPostShow(response, $form);
-    }
-
-    formHideTarget(
-      $($form.attr('emory-form-ajax-success-post-hide-target')), 
-      $form.attr('emory-form-transition'), 
-      function () {
-        return ajaxSuccessPostShow(response, $form);
-      }
-    );
-  }
-
-  function ajaxSuccessPostShow(response, $form) {
-    if( ! $form.attr('emory-form-ajax-success-post-show-target') ) {
-      return ajaxSuccessCallback(response, $form);
-    }
-
-    formShowTarget(
-      $($form.attr('emory-form-ajax-success-post-show-target')), 
-      $form.attr('emory-form-transition'), 
-      function () {
-        return ajaxSuccessCallback(response, $form);
-      }
-    );
-  }
-
-  function ajaxSuccessCallback(response, $form) {
-    if( ! $form.attr('emory-form-ajax-success-callback') ) {
-      return;
-    }
-
-    window[$form.attr('emory-form-ajax-success-callback')](response, $form);
 
     return;
   }
 
-  // Helpers for UI
-  
-  function formAddAlert($target, alertText, alertClass, transition, callback) {
-    if( ! alertClass ) { alertClass = 'info'; }
-    if( ! callback ) { callback = function () {}; }
-    var $alert = $('<div data-alert="" class="alert-box '+alertClass+'">'+alertText+'<a href="#" class="close">×</a></div>');
-    $alert.css('display','none');
-    $target.prepend($alert);
-    formShowTarget(
-      $alert,
-      transition,
-      callback
+  if( $form.attr(_emory._attributePrefix + "loading-target") ) {
+    $($form.attr(_emory._attributePrefix + "loading-target")).removeClass(
+      _emory._attributePrefix + "loading"
     );
   }
 
-  // Remove immediate alert children from $target
-  function formRemoveAllAlerts($target, transition) {
-    $target.children('.alert-box').each(function () {
-      var $alertBox = $(this);
-      formHideTarget(
-        $alertBox,
-        transition,
-        function () {
-          $alertBox.remove();
+  if( ! _emory._checkResponseSuccess(response) ) {
+    return _emory._addAlert(
+      $form, 
+      _emory._getResponseErrorString(response),
+      'error'
+    );
+  }
+
+  return _emory._ajaxCompletePreviewHide($form, response);
+}
+
+// Preview Hide
+Emory.prototype._ajaxCompletePreviewHide($form, response) {
+  var _emory = this;
+
+  if( typeof $form.attr(_emory._attributePrefix + 'ajax-preview-hide-target') === "undefined" ) {
+    return _emory._ajaxCompletePreviewShow($form, response);
+  }
+
+  return _emory._hideTarget(
+    $form,
+    $($form.attr(_emory._attributePrefix + 'ajax-preview-hide-target')),
+    _emory._ajaxCompletePreviewShow($form, response);
+  );
+}
+
+// Preview Show
+Emory.prototype._ajaxCompletePreviewShow($form, response) {
+  var _emory = this;
+
+  if( typeof $form.attr(_emory._attributePrefix + 'ajax-preview-show-target') === "undefined" ) {
+    return _emory._ajaxCompleteViewReplace($form, response);
+  }
+
+  return _emory._showTarget(
+    $form,
+    $($form.attr(_emory._attributePrefix + 'ajax-preview-show-target')),
+    _emory._ajaxCompleteViewReplace($form, response);
+  );
+}
+
+// View Replace
+// Handle all form attributes for "emory-ajax-success-view-NAME-replace-target"
+Emory.prototype._ajaxCompleteViewReplace($form, response) {
+  var _emory = this;
+
+  $.each($form.get(0).attributes, function(i, attr){
+    var key = attr.name;
+    var value = attr.value;
+
+    if( _emory.__matchPattern(key, 'ajax-success-view-', '-replace-target') ) {
+      var viewKey = _emory.__getKey(key, 'ajax-success-view', '-replace-target');
+      
+      if( viewKey.length > 0 ) {
+        var viewHtml = _emory._getResponseViewHtml(response, viewKey);
+
+        if( viewHtml.length > 0 ) {
+          $targets = $(value);
+
+          // For each target, we want to create an HTML element and replace it.
+          $.each($targets, function (j, $target) {
+            $newHtml = $(viewHtml);
+            $newHtml.css('display','none');
+            $target.after($newHtml);
+            $target.remove();
+
+            // TODO - ShowQueue - consider adding $newHtml to a showQueue
+          });
         }
-      );
-    });
+      }
+    }
+  });
+
+  return _emory._ajaxCompleteViewPrepend($form, response);
+}
+
+// View Prepend
+Emory.prototype._ajaxCompleteViewPrepend($form, response) {
+  var _emory = this;
+
+  $.each($form.get(0).attributes, function(i, attr){
+    var key = attr.name;
+    var value = attr.value;
+
+    if( _emory.__matchPattern(key, 'ajax-success-view-', '-prepend-target') ) {
+      var viewKey = _emory.__getKey(key, 'ajax-success-view', '-prepend-target');
+      
+      if( viewKey.length > 0 ) {
+        var viewHtml = _emory._getResponseViewHtml(response, viewKey);
+
+        if( viewHtml.length > 0 ) {
+          $targets = $(value);
+
+          // For each target, we want to create an HTML element and prepend it.
+          $.each($targets, function (j, $target) {
+            $newHtml = $(viewHtml);
+            $newHtml.css('display','none');
+            $target.prepend($newHtml);
+
+            // TODO - ShowQueue - consider adding $newHtml to a showQueue
+          });
+        }
+      }
+    }
+  });
+
+  return _emory._ajaxCompleteViewAppend($form, response);
+}
+
+// View Append
+Emory.prototype._ajaxCompleteViewAppend($form, response) {
+  var _emory = this;
+
+  $.each($form.get(0).attributes, function(i, attr){
+    var key = attr.name;
+    var value = attr.value;
+
+    if( _emory.__matchPattern(key, 'ajax-success-view-', '-append-target') ) {
+      var viewKey = _emory.__getKey(key, 'ajax-success-view', '-append-target');
+      
+      if( viewKey.length > 0 ) {
+        var viewHtml = _emory._getResponseViewHtml(response, viewKey);
+
+        if( viewHtml.length > 0 ) {
+          $targets = $(value);
+
+          // For each target, we want to create an HTML element and prepend it.
+          $.each($targets, function (j, $target) {
+            $newHtml = $(viewHtml);
+            $newHtml.css('display','none');
+            $target.append($newHtml);
+
+            // TODO - ShowQueue - consider adding $newHtml to a showQueue
+          });
+        }
+      }
+    }
+  });
+
+  return _emory._ajaxCompletePostviewHide($form, response);
+}
+
+// Postview Hide
+Emory.prototype._ajaxCompletePostviewHide($form, response) {
+  var _emory = this;
+
+  if( typeof $form.attr(_emory._attributePrefix + 'ajax-postview-hide-target') === "undefined" ) {
+    return _emory._ajaxCompletePostviewShow($form, response);
   }
 
-  function formHideTarget($target, transition, callback) {
-    if( ! transition ||
-        Array('slide','fade').indexOf(transition) < 0 ) {
-      transition = 'slide';
-    }
+  return _emory._hideTarget(
+    $form,
+    $($form.attr(_emory._attributePrefix + 'ajax-postview-hide-target')),
+    _emory._ajaxCompletePostviewShow($form, response);
+  );
+}
 
-    if( ! callback ) { 
-      callback = function () { /* NADA */ };
-    }
+// Postview Show
+Emory.prototype._ajaxCompletePostviewShow($form, response) {
+  var _emory = this;
 
-    if( transition == 'slide' ) {
-      return $target.slideUp().promise().done(callback);
-    }
-
-    if( transition == 'fade' ) {
-      return $target.fadeOut().promise().done(callback);
-    }
+  if( typeof $form.attr(_emory._attributePrefix + 'ajax-postview-show-target') === "undefined" ) {
+    return _emory._ajaxCompleteCallback($form, response);
   }
 
-  function formShowTarget($target, transition, callback) {
-    if( ! transition ||
-        Array('slide','fade').indexOf(transition) < 0 ) {
-      transition = 'slide';
-    }
+  return _emory._showTarget(
+    $form,
+    $($form.attr(_emory._attributePrefix + 'ajax-postview-show-target')),
+    _emory._ajaxCompleteCallback($form, response);
+  );
+}
 
-    if( ! callback ) { 
-      callback = function () { /* NADA */ };
-    }
+// Callback
+Emory.prototype._ajaxCompleteCallback($form, response) {
+  var _emory = this;
 
-    if( transition == 'slide' ) {
-      return $target.slideDown().promise().done(callback);
-    }
-
-    if( transition == 'fade' ) {
-      return $target.fadeIn().promise().done(callback);
-    }
+  if( typeof $form.attr(_emory._attributePrefix + 'ajax-callback') === "undefined" ) {
+    return;
   }
-});
+
+  return window[$form.attr(_emory._attributePrefix + 'emory-ajax-callback')](response, $form);
+}
+
+// // // // // // // // // // // // // // // 
+// Helper functions for DOM management.   // 
+// // // // // // // // // // // // // // // 
+
+Emory.prototype._showTarget = function($form, $target, callback) {
+  var _emory = this;
+
+  if( typeof callback !== "function" ) {
+    callback = function () {};
+  }
+
+  var transition = "slide";
+
+  if( typeof $form.attr(_emory._attributePrefix + 'ajax-transition') !== "undefined" ) {
+    transition = $form.attr(_emory._attributePrefix + 'ajax-transition');
+  }
+
+  if( ! transition ||
+      Array('slide','fade').indexOf(transition) < 0 ) {
+    transition = 'slide';
+  }
+
+  if( transition == 'slide' ) {
+    return $target.slideDown().promise().done(callback);
+  }
+
+  if( transition == 'fade' ) {
+    return $target.fadeIn().promise().done(callback);
+  }
+}
+
+Emory.prototype._hideTarget = function($form, $target, callback) {
+  var _emory = this;
+
+  if( typeof callback !== "function" ) {
+    callback = function () {};
+  }
+
+  var transition = "slide";
+
+  if( typeof $form.attr(_emory._attributePrefix + 'ajax-transition') !== "undefined" ) {
+    transition = $form.attr(_emory._attributePrefix + 'ajax-transition');
+  }
+
+  if( ! transition ||
+      Array('slide','fade').indexOf(transition) < 0 ) {
+    transition = 'slide';
+  }
+
+  if( transition == 'slide' ) {
+    return $target.slideUp().promise().done(callback);
+  }
+
+  if( transition == 'fade' ) {
+    return $target.fadeOut().promise().done(callback);
+  }
+}
+
+Emory.prototype._removeAllAlerts = function($form, $target) {
+  var _emory = this;
+
+  $target.children('[' + _emory._attributePrefix + 'alert]').each(function (i, $alert) {
+    _emory._hideTarget(
+      $form,
+      $alert,
+      function() {
+        $alert.remove();
+      }
+    );
+  });
+}
+
+Emory.prototype._addAlert = function($form, message, type, callback) {
+  var _emory = this;
+
+  if( typeof callback !== "function" ) {
+    callback = function () {};
+  }
+
+  if( typeof $form.attr(_emory._attributePrefix + 'ajax-target') === "undefined" ) {
+    return;
+  }
+
+  $target = $($form.attr(_emory._attributePrefix + 'ajax-target'));
+
+  $alert = $(_emory._generateAlertHtml(message, type));
+  $alert.css('display','none');
+
+  $target.prepend($alert);
+
+  return _emory._showTarget($form, $target, callback);
+}
