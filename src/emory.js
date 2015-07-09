@@ -3,6 +3,10 @@ var Emory = function (params) {
     params = {};
   }
 
+  this._initInterval = typeof params.initInterval === "number"
+                     ? params.initInterval
+                     : this.constructor.__initInterval;
+
   this._attributePrefix = typeof params.attributePrefix === "string" 
                         ? params.attributePrefix
                         : this.constructor.__attributePrefix;
@@ -33,6 +37,7 @@ var Emory = function (params) {
 // Default Values / Functions 
 
 Emory.__attributePrefix = "emory-";
+Emory.__initInterval = 5000;
 
 Emory.__checkResponseSuccess = function (response) {
   if( typeof response !== "undefined" &&
@@ -166,9 +171,57 @@ Emory.prototype._init = function () {
     }
   );
 
-  // TODO - Onload Listeners & Intervals
-  
-  // TODO - Timeout Listeners & Intervals
+  setInterval(function () {
+    _emory._checkOnloadForms();
+    _emory._checkTimeoutForms();
+  }, _emory._initInterval);
+}
+
+Emory.prototype._checkOnloadForms = function () {
+  var _emory = this;
+
+  var $onloadForms = $('[' + _emory._attributePrefix + 'onload-submit]');
+
+  $.each($onloadForms, function (i, $onloadForm) {
+    $onloadForm.removeAttr(_emory._attributePrefix + 'onload-submit');
+    _emory._handleFormSubmit($onloadForm);
+  });
+}
+
+Emory.prototype._checkTimeoutForms = function () {
+  var _emory = this;
+
+  var $timeoutForms = $('[' + _emory._attributePrefix + 'timeout-submit]');
+
+  $.each($timeoutForms, function (i, $timeoutForm) {
+    var submitTimeoutMS = $timeoutForm.attr(_emory._attributePrefix + 'timeout-submit')
+    $timeoutForm.removeAttr(_emory._attributePrefix + 'timeout-submit');
+
+    if( submitTimeoutMS.length === 0 ) {
+      return;
+    }
+
+    var submitTimeoutID = '' + Math.floor(Math.random() * 999999999) + Date.now();
+
+    $timeoutForm.attr(_emory._attributePrefix + 'pending-timeout-submit', submitTimeoutID);
+
+    setTimeout(function () {
+      _emory._submitTimeoutForm(submitTimeoutID);
+    }, parseFloat(submitTimeoutMS));
+  });
+}
+
+Emory.prototype._submitTimeoutForm = function (submitTimeoutID) {
+  var _emory = this;
+
+  var $timeoutForm = $('[' + _emory._attributePrefix + 'pending-timeout-submit="'+submitTimeoutID+'"]');
+
+  if( $timeoutForm.length === 0 ) {
+    return;
+  }
+
+  $timeoutForm.removeAttr(_emory._attributePrefix + 'pending-timeout-submit');
+  return _emory._handleFormSubmit($timeoutForm);
 }
 
 // Submission Handlers
