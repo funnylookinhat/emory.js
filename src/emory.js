@@ -125,7 +125,7 @@ Emory.prototype.__getKey = function (str, pre, post) {
 
 // Binding Initialization
 
-Emory.prototype._init() = function () {
+Emory.prototype._init = function () {
   var _emory = this;
 
   $(document).on(
@@ -174,7 +174,7 @@ Emory.prototype._init() = function () {
 // Submission Handlers
 
 // $initiator is either a form itself OR an element within a form.
-Emory.prototype._handleFormSubmit($initiator) {
+Emory.prototype._handleFormSubmit = function ($initiator) {
   var _emory = this;
 
   // Get Form
@@ -237,13 +237,13 @@ Emory.prototype._handleFormSubmit($initiator) {
   return;
 }
 
-Emory.prototype._submitFormNormal($form) {
+Emory.prototype._submitFormNormal = function ($form) {
   $form.submit();
 
   return;
 }
 
-Emory.prototype._submitFormAjax($form) {
+Emory.prototype._submitFormAjax = function ($form) {
   var _emory = this;
 
   if( typeof $form.attr(_emory._attributePrefix + 'ajax-target') !== "undefined" ) {
@@ -295,7 +295,7 @@ Emory.prototype._submitFormAjax($form) {
   });
 }
 
-Emory.prototype._submitFormAjaxFile($form) {
+Emory.prototype._submitFormAjaxFile = function ($form) {
   var _emory = this;
 
   var formData = new FormData();
@@ -342,7 +342,7 @@ Emory.prototype._submitFormAjaxFile($form) {
   });
 }
 
-Emory.prototype._submitFormAjaxFileFallback($form) {
+Emory.prototype._submitFormAjaxFileFallback = function ($form) {
   var _emory = this;
 
   // Handle by posting to an iFrame on the page.
@@ -382,7 +382,7 @@ Emory.prototype._submitFormAjaxFileFallback($form) {
 // // // // // // // // // // // // // // // // // // // 
 
 // This is called for request failures, not REST API errors.
-Emory.prototype._handleFormAjaxFailure($form, message) {
+Emory.prototype._handleFormAjaxFailure = function ($form, message) {
   var _emory = this;
 
   if( $form.attr(_emory._attributePrefix + "loading-target") ) {
@@ -399,7 +399,7 @@ Emory.prototype._handleFormAjaxFailure($form, message) {
 // here and chains the next dozen or so functions. // 
 // // // // // // // // // // // // // // // // // // 
 
-Emory.prototype._handleFormAjaxComplete($form, response) {
+Emory.prototype._handleFormAjaxComplete = function ($form, response) {
   var _emory = this;
 
   var callback_url = _emory._getResponseCallbackUrl(response);
@@ -428,42 +428,51 @@ Emory.prototype._handleFormAjaxComplete($form, response) {
     );
   }
 
-  return _emory._ajaxCompletePreviewHide($form, response);
+  // Any views that are loaded in will be added to this queue
+  // If they aren't show by another target, then they will automatically be 
+  // shown right before `emory-ajax-callback`
+  $showTargets = $();
+
+  return _emory._ajaxCompletePreviewHide($form, response, $showTargets);
 }
 
 // Preview Hide
-Emory.prototype._ajaxCompletePreviewHide($form, response) {
+Emory.prototype._ajaxCompletePreviewHide = function ($form, response, $showTargets) {
   var _emory = this;
 
   if( typeof $form.attr(_emory._attributePrefix + 'ajax-preview-hide-target') === "undefined" ) {
-    return _emory._ajaxCompletePreviewShow($form, response);
+    return _emory._ajaxCompletePreviewShow($form, response, $showTargets);
   }
 
   return _emory._hideTarget(
     $form,
     $($form.attr(_emory._attributePrefix + 'ajax-preview-hide-target')),
-    _emory._ajaxCompletePreviewShow($form, response);
+    function () {
+      _emory._ajaxCompletePreviewShow($form, response, $showTargets);
+    }
   );
 }
 
 // Preview Show
-Emory.prototype._ajaxCompletePreviewShow($form, response) {
+Emory.prototype._ajaxCompletePreviewShow = function ($form, response, $showTargets) {
   var _emory = this;
 
   if( typeof $form.attr(_emory._attributePrefix + 'ajax-preview-show-target') === "undefined" ) {
-    return _emory._ajaxCompleteViewReplace($form, response);
+    return _emory._ajaxCompleteViewReplace($form, response, $showTargets);
   }
 
   return _emory._showTarget(
     $form,
     $($form.attr(_emory._attributePrefix + 'ajax-preview-show-target')),
-    _emory._ajaxCompleteViewReplace($form, response);
+    function () {
+      _emory._ajaxCompleteViewReplace($form, response, $showTargets);
+    }
   );
 }
 
 // View Replace
 // Handle all form attributes for "emory-ajax-success-view-NAME-replace-target"
-Emory.prototype._ajaxCompleteViewReplace($form, response) {
+Emory.prototype._ajaxCompleteViewReplace = function ($form, response, $showTargets) {
   var _emory = this;
 
   $.each($form.get(0).attributes, function(i, attr){
@@ -493,11 +502,11 @@ Emory.prototype._ajaxCompleteViewReplace($form, response) {
     }
   });
 
-  return _emory._ajaxCompleteViewPrepend($form, response);
+  return _emory._ajaxCompleteViewPrepend($form, response, $showTargets);
 }
 
 // View Prepend
-Emory.prototype._ajaxCompleteViewPrepend($form, response) {
+Emory.prototype._ajaxCompleteViewPrepend = function ($form, response, $showTargets) {
   var _emory = this;
 
   $.each($form.get(0).attributes, function(i, attr){
@@ -526,11 +535,11 @@ Emory.prototype._ajaxCompleteViewPrepend($form, response) {
     }
   });
 
-  return _emory._ajaxCompleteViewAppend($form, response);
+  return _emory._ajaxCompleteViewAppend($form, response, $showTargets);
 }
 
 // View Append
-Emory.prototype._ajaxCompleteViewAppend($form, response) {
+Emory.prototype._ajaxCompleteViewAppend = function ($form, response, $showTargets) {
   var _emory = this;
 
   $.each($form.get(0).attributes, function(i, attr){
@@ -559,41 +568,64 @@ Emory.prototype._ajaxCompleteViewAppend($form, response) {
     }
   });
 
-  return _emory._ajaxCompletePostviewHide($form, response);
+  return _emory._ajaxCompletePostviewHide($form, response, $showTargets);
 }
 
 // Postview Hide
-Emory.prototype._ajaxCompletePostviewHide($form, response) {
+Emory.prototype._ajaxCompletePostviewHide = function ($form, response, $showTargets) {
   var _emory = this;
 
   if( typeof $form.attr(_emory._attributePrefix + 'ajax-postview-hide-target') === "undefined" ) {
-    return _emory._ajaxCompletePostviewShow($form, response);
+    return _emory._ajaxCompletePostviewShow($form, response, $showTargets);
   }
 
   return _emory._hideTarget(
     $form,
     $($form.attr(_emory._attributePrefix + 'ajax-postview-hide-target')),
-    _emory._ajaxCompletePostviewShow($form, response);
+    function () {
+      _emory._ajaxCompletePostviewShow($form, response, $showTargets);
+    }
   );
 }
 
 // Postview Show
-Emory.prototype._ajaxCompletePostviewShow($form, response) {
+Emory.prototype._ajaxCompletePostviewShow = function ($form, response, $showTargets) {
   var _emory = this;
 
   if( typeof $form.attr(_emory._attributePrefix + 'ajax-postview-show-target') === "undefined" ) {
-    return _emory._ajaxCompleteCallback($form, response);
+    return _emory._ajaxCompleteShowTargets($form, response, $showTargets);
   }
 
   return _emory._showTarget(
     $form,
     $($form.attr(_emory._attributePrefix + 'ajax-postview-show-target')),
-    _emory._ajaxCompleteCallback($form, response);
+    function () {
+      _emory._ajaxCompleteShowTargets($form, response, $showTargets);
+    }
+  );
+}
+
+// Show $showTargets
+Emory.prototype._ajaxCompleteShowTargets = function ($form, response, $showTargets) {
+  var _emory = this;
+
+  $hiddenShowTargets = $showTargets.filter(':hidden');
+
+  if( $hiddenShowTargets.length === 0 ) {
+    return _emory._ajaxCompleteCallback($form, response);
+  }
+
+  return _emory._showTarget(
+    $form,
+    $hiddenShowTargets,
+    function () {
+      _emory._ajaxCompleteCallback($form, response);
+    }
   );
 }
 
 // Callback
-Emory.prototype._ajaxCompleteCallback($form, response) {
+Emory.prototype._ajaxCompleteCallback = function ($form, response) {
   var _emory = this;
 
   if( typeof $form.attr(_emory._attributePrefix + 'ajax-callback') === "undefined" ) {
