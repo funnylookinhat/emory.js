@@ -28,7 +28,7 @@ Only initialize Emory once.  You can pass the following to override defaults.
 	- This will invoke all of the emory-ajax-* events below if applicable.
 - `emory-loading-target` : jQuery selector to apply the "emory-loading" class to during form processing.
 	- Note: "emory-loading" will be replaced with your own attributePrefix if provided.
-- `emory-ajax-target` : jQuery selector to put alerts into.
+- `emory-alert-target` : jQuery selector to put alerts into.
 - `emory-ajax-transition` : How to transition hiding and showing elements.  "slide" ( Default ) or "fade"
 
 **DOM Management**
@@ -49,11 +49,12 @@ There are four steps of a successful AJAX request:
 **view** - These target specific views and load them into the DOM. The "NAME" 
 keyword should be replaced with the specific identifier you are expecting to 
 have returned within your JSON.  These will be set to `display: none;` by 
-default and should be shown in postview.
+default, and then shown by default if `emory-ajax-postview-show-target` doesn't 
+target them right before `emory-ajax-callback` is run.
 
-- `emory-ajax-success-view-NAME-replace-target` : A jQuery selector to replace with the view.
-- `emory-ajax-success-view-NAME-prepend-target` : A jQuery selector to prepend the view to.
-- `emory-ajax-success-view-NAME-append-target` : A jQuery selector to append the view to.
+- `emory-ajax-view-NAME-replace-target` : A jQuery selector to replace with the view.
+- `emory-ajax-view-NAME-prepend-target` : A jQuery selector to prepend the view to.
+- `emory-ajax-view-NAME-append-target` : A jQuery selector to append the view to.
 
 **postview** - After views have been loaded into the DOM.
 

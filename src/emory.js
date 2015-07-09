@@ -107,7 +107,7 @@ Emory.prototype.__matchPattern = function (str, pre, post) {
   var _emory = this;
 
   if( str.indexOf(_emory._attributePrefix + pre) === 0 &&
-      key.substr(0, key.length - post.length) === post )
+      str.substr(str.length - post.length) === post )
     return true;
 
   return false;
@@ -182,9 +182,9 @@ Emory.prototype._checkOnloadForms = function () {
 
   var $onloadForms = $('[' + _emory._attributePrefix + 'onload-submit]');
 
-  $.each($onloadForms, function (i, $onloadForm) {
-    $onloadForm.removeAttr(_emory._attributePrefix + 'onload-submit');
-    _emory._handleFormSubmit($onloadForm);
+  $onloadForms.each(function (i, onloadForm) {
+    $(onloadForm).removeAttr(_emory._attributePrefix + 'onload-submit');
+    _emory._handleFormSubmit($(onloadForm));
   });
 }
 
@@ -193,9 +193,9 @@ Emory.prototype._checkTimeoutForms = function () {
 
   var $timeoutForms = $('[' + _emory._attributePrefix + 'timeout-submit]');
 
-  $.each($timeoutForms, function (i, $timeoutForm) {
-    var submitTimeoutMS = $timeoutForm.attr(_emory._attributePrefix + 'timeout-submit')
-    $timeoutForm.removeAttr(_emory._attributePrefix + 'timeout-submit');
+  $timeoutForms.each(function (i, timeoutForm) { 
+    var submitTimeoutMS = $(timeoutForm).attr(_emory._attributePrefix + 'timeout-submit')
+    $(timeoutForm).removeAttr(_emory._attributePrefix + 'timeout-submit');
 
     if( submitTimeoutMS.length === 0 ) {
       return;
@@ -203,7 +203,7 @@ Emory.prototype._checkTimeoutForms = function () {
 
     var submitTimeoutID = '' + Math.floor(Math.random() * 999999999) + Date.now();
 
-    $timeoutForm.attr(_emory._attributePrefix + 'pending-timeout-submit', submitTimeoutID);
+    $(timeoutForm).attr(_emory._attributePrefix + 'pending-timeout-submit', submitTimeoutID);
 
     setTimeout(function () {
       _emory._submitTimeoutForm(submitTimeoutID);
@@ -299,8 +299,8 @@ Emory.prototype._submitFormNormal = function ($form) {
 Emory.prototype._submitFormAjax = function ($form) {
   var _emory = this;
 
-  if( typeof $form.attr(_emory._attributePrefix + 'ajax-target') !== "undefined" ) {
-    _emory._removeAllAlerts($form, $($form.attr(_emory._attributePrefix + 'ajax-target')));
+  if( typeof $form.attr(_emory._attributePrefix + 'alert-target') !== "undefined" ) {
+    _emory._removeAllAlerts($form, $($form.attr(_emory._attributePrefix + 'alert-target')));
   }
 
   if( $form.find('input[type="file"]').length ) {
@@ -484,7 +484,7 @@ Emory.prototype._handleFormAjaxComplete = function ($form, response) {
   // Any views that are loaded in will be added to this queue
   // If they aren't show by another target, then they will automatically be 
   // shown right before `emory-ajax-callback`
-  $showTargets = $();
+  var $showTargets = $();
 
   return _emory._ajaxCompletePreviewHide($form, response, $showTargets);
 }
@@ -524,7 +524,7 @@ Emory.prototype._ajaxCompletePreviewShow = function ($form, response, $showTarge
 }
 
 // View Replace
-// Handle all form attributes for "emory-ajax-success-view-NAME-replace-target"
+// Handle all form attributes for "emory-ajax-view-NAME-replace-target"
 Emory.prototype._ajaxCompleteViewReplace = function ($form, response, $showTargets) {
   var _emory = this;
 
@@ -532,8 +532,8 @@ Emory.prototype._ajaxCompleteViewReplace = function ($form, response, $showTarge
     var key = attr.name;
     var value = attr.value;
 
-    if( _emory.__matchPattern(key, 'ajax-success-view-', '-replace-target') ) {
-      var viewKey = _emory.__getKey(key, 'ajax-success-view', '-replace-target');
+    if( _emory.__matchPattern(key, 'ajax-view-', '-replace-target') ) {
+      var viewKey = _emory.__getKey(key, 'ajax-view-', '-replace-target');
       
       if( viewKey.length > 0 ) {
         var viewHtml = _emory._getResponseViewHtml(response, viewKey);
@@ -542,13 +542,13 @@ Emory.prototype._ajaxCompleteViewReplace = function ($form, response, $showTarge
           $targets = $(value);
 
           // For each target, we want to create an HTML element and replace it.
-          $.each($targets, function (j, $target) {
-            $newHtml = $(viewHtml);
+          $targets.each(function (j, target) { 
+            var $newHtml = $(viewHtml);
             $newHtml.css('display','none');
-            $target.after($newHtml);
-            $target.remove();
+            $(target).after($newHtml);
+            $(target).remove();
 
-            // TODO - ShowQueue - consider adding $newHtml to a showQueue
+            $showTargets = $showTargets.add($newHtml);
           });
         }
       }
@@ -566,8 +566,8 @@ Emory.prototype._ajaxCompleteViewPrepend = function ($form, response, $showTarge
     var key = attr.name;
     var value = attr.value;
 
-    if( _emory.__matchPattern(key, 'ajax-success-view-', '-prepend-target') ) {
-      var viewKey = _emory.__getKey(key, 'ajax-success-view', '-prepend-target');
+    if( _emory.__matchPattern(key, 'ajax-view-', '-prepend-target') ) {
+      var viewKey = _emory.__getKey(key, 'ajax-view-', '-prepend-target');
       
       if( viewKey.length > 0 ) {
         var viewHtml = _emory._getResponseViewHtml(response, viewKey);
@@ -576,12 +576,12 @@ Emory.prototype._ajaxCompleteViewPrepend = function ($form, response, $showTarge
           $targets = $(value);
 
           // For each target, we want to create an HTML element and prepend it.
-          $.each($targets, function (j, $target) {
-            $newHtml = $(viewHtml);
+          $targets.each(function (j, target) {
+            var $newHtml = $(viewHtml);
             $newHtml.css('display','none');
-            $target.prepend($newHtml);
+            $(target).prepend($newHtml);
 
-            // TODO - ShowQueue - consider adding $newHtml to a showQueue
+            $showTargets = $showTargets.add($newHtml);
           });
         }
       }
@@ -599,8 +599,8 @@ Emory.prototype._ajaxCompleteViewAppend = function ($form, response, $showTarget
     var key = attr.name;
     var value = attr.value;
 
-    if( _emory.__matchPattern(key, 'ajax-success-view-', '-append-target') ) {
-      var viewKey = _emory.__getKey(key, 'ajax-success-view', '-append-target');
+    if( _emory.__matchPattern(key, 'ajax-view-', '-append-target') ) {
+      var viewKey = _emory.__getKey(key, 'ajax-view-', '-append-target');
       
       if( viewKey.length > 0 ) {
         var viewHtml = _emory._getResponseViewHtml(response, viewKey);
@@ -609,12 +609,12 @@ Emory.prototype._ajaxCompleteViewAppend = function ($form, response, $showTarget
           $targets = $(value);
 
           // For each target, we want to create an HTML element and prepend it.
-          $.each($targets, function (j, $target) {
-            $newHtml = $(viewHtml);
+          $targets.each(function (j, target) {
+            var $newHtml = $(viewHtml);
             $newHtml.css('display','none');
-            $target.append($newHtml);
+            $(target).append($newHtml);
 
-            // TODO - ShowQueue - consider adding $newHtml to a showQueue
+            $showTargets = $showTargets.add($newHtml);
           });
         }
       }
@@ -749,15 +749,15 @@ Emory.prototype._hideTarget = function($form, $target, callback) {
 Emory.prototype._removeAllAlerts = function($form, $target) {
   var _emory = this;
 
-  $target.children('[' + _emory._attributePrefix + 'alert]').each(function (i, $alert) {
-    _emory._hideTarget(
-      $form,
-      $alert,
-      function() {
-        $alert.remove();
-      }
-    );
-  });
+  $alerts = $target.children('[' + _emory._attributePrefix + 'alert]');
+
+  _emory._hideTarget(
+    $form,
+    $alerts,
+    function() {
+      $alerts.remove();
+    }
+  );
 }
 
 Emory.prototype._addAlert = function($form, message, type, callback) {
@@ -767,16 +767,16 @@ Emory.prototype._addAlert = function($form, message, type, callback) {
     callback = function () {};
   }
 
-  if( typeof $form.attr(_emory._attributePrefix + 'ajax-target') === "undefined" ) {
+  if( typeof $form.attr(_emory._attributePrefix + 'alert-target') === "undefined" ) {
     return;
   }
 
-  $target = $($form.attr(_emory._attributePrefix + 'ajax-target'));
+  $target = $($form.attr(_emory._attributePrefix + 'alert-target'));
 
   $alert = $(_emory._generateAlertHtml(message, type));
   $alert.css('display','none');
 
   $target.prepend($alert);
 
-  return _emory._showTarget($form, $target, callback);
+  return _emory._showTarget($form, $alert, callback);
 }
