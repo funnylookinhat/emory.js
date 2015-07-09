@@ -454,7 +454,7 @@ Emory.prototype._handleFormAjaxFailure = function ($form, message) {
 
 Emory.prototype._handleFormAjaxComplete = function ($form, response) {
   var _emory = this;
-
+  
   var callback_url = _emory._getResponseCallbackUrl(response);
 
   if( callback_url.length > 0 ) {
