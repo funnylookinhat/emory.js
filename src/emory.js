@@ -171,6 +171,23 @@ Emory.prototype._init = function () {
     }
   );
 
+  // Listen for "emory-submit" on any form as well.
+  $(document).on(
+    _emory._attributePrefix + 'submit', 
+    '[' + _emory._attributePrefix + 'ajax]', 
+    function (e) {
+      _emory._handleFormSubmit($(this));
+    }
+  );
+
+  $(document).on(
+    _emory._attributePrefix + 'submit', 
+    '[' + _emory._attributePrefix + 'normal]', 
+    function (e) {
+      _emory._handleFormSubmit($(this));
+    }
+  );
+
   setInterval(function () {
     _emory._checkOnloadForms();
     _emory._checkTimeoutForms();
@@ -454,7 +471,7 @@ Emory.prototype._handleFormAjaxFailure = function ($form, message) {
 
 Emory.prototype._handleFormAjaxComplete = function ($form, response) {
   var _emory = this;
-  
+
   var callback_url = _emory._getResponseCallbackUrl(response);
 
   if( callback_url.length > 0 ) {
