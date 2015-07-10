@@ -12,11 +12,15 @@ Only initialize Emory once.  You can pass the following to override defaults.
 
 - **attributePrefix** : String prefix for all attributes, default is "emory-".
 - **checkResponseSuccess** : `function (response)` : Should return true or false depending on response.
+	- Used to strictly check if a request was successful.  If not, Emory will attempt to present the error message from getResponseErrorString.
 - **getResponseErrorString** : `function (response)` : Should return a plaintext string of an error if one occurred.
+	- This should return an empty string if there is no error.
+- **getResponseMessageString** : `function (response)` : Should return a plaintext string of a message if one was received.
+	- This should return an empty string if there is no message.
 - **getResponseViewHtml** : `function (response, name)` : Should return the HTML for a view with key "name".
 - **getResponseCallbackUrl** : `function (response)` : Should return a URL to redirect to if present in response, "" otherwise.
 - **generateAlertHtml** : `function (text, type)` : Should return HTML for an alert message.
-	- Types can be "error" and "info".  
+	- Types can be "error" and "success".  
 	- Wrapper element must have attribute "emory-alert"
 
 ##Form Attributes

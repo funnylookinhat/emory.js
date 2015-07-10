@@ -19,6 +19,10 @@ var Emory = function (params) {
                          ? params.getResponseErrorString
                          : this.constructor.__getResponseErrorString;
 
+  this._getResponseMessageString = typeof params.getResponseMessageString === "function" 
+                                 ? params.getResponseMessageString
+                                 : this.constructor.__getResponseMessageString;
+
   this._getResponseViewHtml = typeof params.getResponseViewHtml === "function"
                             ? params.getResponseViewHtml
                             : this.constructor.__getResponseViewHtml;
@@ -60,7 +64,16 @@ Emory.__getResponseErrorString = function (response) {
     return response.error;
   }
 
-  return "Unknown error has occurred.";
+  return "";
+}
+
+Emory.__getResponseMessageString = function (response) {
+  if( typeof response !== "undefined" &&
+      typeof response.message !== "undefined" ) {
+    return response.message;
+  }
+
+  return "";
 }
 
 Emory.__getResponseViewHtml = function (response, name) {
@@ -171,7 +184,7 @@ Emory.prototype._init = function () {
     }
   );
 
-  // Listen for "emory-submit" on any form as well.
+  // Listen for "emory-submit" on any "emory-ajax" or "emory-normal" form as well.
   $(document).on(
     _emory._attributePrefix + 'submit', 
     '[' + _emory._attributePrefix + 'ajax]', 
@@ -491,9 +504,15 @@ Emory.prototype._handleFormAjaxComplete = function ($form, response) {
   }
 
   if( ! _emory._checkResponseSuccess(response) ) {
+    var error = _emory._getResponseErrorString(response);
+
+    if( ! error.length ) {
+      error = "An unknown error has occurred.";
+    }
+
     return _emory._addAlert(
       $form, 
-      _emory._getResponseErrorString(response),
+      error,
       'error'
     );
   }
@@ -682,14 +701,34 @@ Emory.prototype._ajaxCompleteShowTargets = function ($form, response, $showTarge
   $hiddenShowTargets = $showTargets.filter(':hidden');
 
   if( $hiddenShowTargets.length === 0 ) {
-    return _emory._ajaxCompleteCallback($form, response);
+    return _emory._ajaxCompleteShowMessage($form, response);
   }
 
   return _emory._showTarget(
     $form,
     $hiddenShowTargets,
     function () {
-      _emory._ajaxCompleteCallback($form, response);
+      _emory._ajaxCompleteShowMessage($form, response);
+    }
+  );
+}
+
+// Show a message if the response included one.
+Emory.prototype._ajaxCompleteShowMessage = function ($form, response) {
+  var _emory = this;
+
+  var message = _emory._getResponseMessageString(response);
+
+  if( message.length === 0 ) {
+    return _emory._ajaxCompleteCallback($form, response);
+  }
+
+  return _emory._addAlert(
+    $form, 
+    message,
+    'success',
+    function () {
+      _emory._ajaxCompleteCallback($form, response)
     }
   );
 }
