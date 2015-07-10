@@ -201,6 +201,9 @@ Emory.prototype._init = function () {
     }
   );
 
+  _emory._checkOnloadForms();
+  _emory._checkTimeoutForms();
+  
   setInterval(function () {
     _emory._checkOnloadForms();
     _emory._checkTimeoutForms();
