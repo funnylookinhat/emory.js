@@ -53,12 +53,18 @@ There are four steps of a successful AJAX request:
 **view** - These target specific views and load them into the DOM. The "NAME" 
 keyword should be replaced with the specific identifier you are expecting to 
 have returned within your JSON.  These will be set to `display: none;` by 
-default, and then shown by default if `emory-ajax-postview-show-target` doesn't 
-target them right before `emory-ajax-callback` is run.
+default.
 
 - `emory-ajax-view-NAME-replace-target` : A jQuery selector to replace with the view.
 - `emory-ajax-view-NAME-prepend-target` : A jQuery selector to prepend the view to.
 - `emory-ajax-view-NAME-append-target` : A jQuery selector to append the view to.
+
+Emory will automatically show any views that are not properly shown / hidden in 
+`emory-ajax-postview-show-target` to make implementing Emory easier.  However, 
+if you want more granular control, you can add the `emory-ajax-view-noautoshow` 
+attribute to not automatically show those views.  You can listen to one of the 
+listed trigger events below, or use the event in `emory-ajax-callback` to show 
+the elements however you wish.
 
 **postview** - After views have been loaded into the DOM.
 
@@ -106,57 +112,12 @@ These can be added either to forms themselves ( i.e. if using
 `emory-onload-submit` ), or to links and fields that are bound using 
 `emory-click-submit` or `emory-enter-submit`.
 
+##Triggered Events
 
+Every time an AJAX submission successfully completes, the following events are 
+triggered ON the elements themselves:
 
-
-
-
-
-- emory-form-ajax
-
-
-##Form Handler
-
-__<form>__
-- emory-form-ajax
-- emory-form-result-target / Default to FORM parent?
-- emory-form-loading-target / Default to FORM parent?
-- emory-form-transition / Default to "slide" - can also be "fade"
-
-- emory-form-onload-submit / Boolean to submit as soon as loaded.
-- emory-form-timeout-submit / Time in milliseconds to wait before auto submitting
-- emory-form-timeout-submit-action / Action to submit to on timeout
-- emory-form-timeout-submit-input-name / Input to change value of on timeout submit
-- emory-form-timeout-submit-input-value / Value to change input to on timeout submit
-
-- emory-form-ajax-success-pre-hide-target -> An ID to slideUp after a successful response.
-- emory-form-ajax-success-pre-show-target -> An ID to slideDown after a successful response.
-- emory-form-ajax-success-post-hide-target -> An ID to slideUp after replacing the form.
-- emory-form-ajax-success-post-show-target -> An ID to slideDown after replacing the form.
-- emory-form-ajax-success-callback -> A javascript function to run.
-
-// The following are not implemented yet.
-- emory-form-ajax-error-pre-show-target -> An ID to slideUp after a failed response.
-- emory-form-ajax-error-pre-show-target -> An ID to slideDown after a failed response.
-- emory-form-ajax-error-post-hide-target -> An ID to slideUp after failed response adds an alert.
-- emory-form-ajax-error-post-show-target -> An ID to slideDown after failed response adds an alert.
-- emory-form-ajax-error-callback -> A javascript function to run.
-
-For response.data.views we require:
-
-- emory-form-ajax-success-view-VIEW-replace-target -> Replaces the selector with the new view.
-- emory-form-ajax-success-view-VIEW-prepend-target -> Prepends the new view to the selector.
-- emory-form-ajax-success-view-VIEW-append-target -> Appends the new view to the selector.
-
-__<input>__ or __<a>__
-- emory-form-enter-submit
-- emory-form-click-submit
-- emory-form-change-submit
-- emory-form-submit-action
-- emory-form-submit-fallback-action
-- emory-form-submit-input-name
-- emory-form-submit-input-value
-- emory-form-submit-ajax -> Set the form to emory-form-ajax
-- emory-form-submit-normal -> Set the form to NOT emory-form-ajax ( If both present, will use ajax )
-
+- `emory-view-loaded` - When an element is loaded and placed into the DOM.
+- `emory-view-shown` - When an emory-triggered process shows an element in the DOM.
+- `emory-view-hidden` - When an emory-triggered process hides an element in the DOM.
 

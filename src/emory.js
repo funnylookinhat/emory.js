@@ -587,6 +587,8 @@ Emory.prototype._ajaxCompleteViewReplace = function ($form, response, $showTarge
             $(target).after($newHtml);
             $(target).remove();
 
+            $newHtml.trigger(_emory._attributePrefix + 'view-loaded');
+
             $showTargets = $showTargets.add($newHtml);
           });
         }
@@ -620,6 +622,8 @@ Emory.prototype._ajaxCompleteViewPrepend = function ($form, response, $showTarge
             $newHtml.css('display','none');
             $(target).prepend($newHtml);
 
+            $newHtml.trigger(_emory._attributePrefix + 'view-loaded');
+
             $showTargets = $showTargets.add($newHtml);
           });
         }
@@ -652,6 +656,8 @@ Emory.prototype._ajaxCompleteViewAppend = function ($form, response, $showTarget
             var $newHtml = $(viewHtml);
             $newHtml.css('display','none');
             $(target).append($newHtml);
+
+            $newHtml.trigger(_emory._attributePrefix + 'view-loaded');
 
             $showTargets = $showTargets.add($newHtml);
           });
@@ -700,6 +706,10 @@ Emory.prototype._ajaxCompletePostviewShow = function ($form, response, $showTarg
 // Show $showTargets
 Emory.prototype._ajaxCompleteShowTargets = function ($form, response, $showTargets) {
   var _emory = this;
+
+  if( typeof $form.attr(_emory._attributePrefix + 'ajax-view-noautoshow') !== "undefined" ) {
+    return _emory._ajaxCompleteShowMessage($form, response);
+  }
 
   $hiddenShowTargets = $showTargets.filter(':hidden');
 
@@ -770,11 +780,15 @@ Emory.prototype._showTarget = function($form, $target, callback) {
   }
 
   if( transition == 'slide' ) {
-    return $target.slideDown().promise().done(callback);
+    return $target.slideDown(function() {
+      $target.trigger(_emory._attributePrefix + 'view-shown');
+    }).promise().done(callback);
   }
 
   if( transition == 'fade' ) {
-    return $target.fadeIn().promise().done(callback);
+    return $target.fadeIn(function() {
+      $target.trigger(_emory._attributePrefix + 'view-shown');
+    }).promise().done(callback);
   }
 }
 
@@ -797,11 +811,15 @@ Emory.prototype._hideTarget = function($form, $target, callback) {
   }
 
   if( transition == 'slide' ) {
-    return $target.slideUp().promise().done(callback);
+    return $target.slideUp(function() {
+      $target.trigger(_emory._attributePrefix + 'view-hidden');
+    }).promise().done(callback);
   }
 
   if( transition == 'fade' ) {
-    return $target.fadeOut().promise().done(callback);
+    return $target.fadeOut(function() {
+      $target.trigger(_emory._attributePrefix + 'view-hidden');
+    }).promise().done(callback);
   }
 }
 
