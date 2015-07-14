@@ -754,7 +754,7 @@ Emory.prototype._ajaxCompleteCallback = function ($form, response) {
     return;
   }
 
-  return window[$form.attr(_emory._attributePrefix + 'emory-ajax-callback')](response, $form);
+  return window[$form.attr(_emory._attributePrefix + 'ajax-callback')](response, $form);
 }
 
 // // // // // // // // // // // // // // // 
