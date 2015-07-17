@@ -5,6 +5,75 @@ Emory - As in Emory Erickson.
 
 http://en.memory-alpha.org/wiki/Emory_Erickson
 
+##Overview
+
+Emory solves the constant, nagging problem that full-stack developers face of 
+having to write brainless Javascript to run their AJAX'd pages.  I found that 
+99% of the requests I would write fell within a fairly narrow pattern of:
+
+- POST : Send a request with some information off to the service.
+- Parse : Check the response for a success or failure, along with other expected returns.
+- Format : Create some DOM elements based on the returned data.
+- Display : Animate hiding and showing various elements of the page to reveal the new information.
+
+Emory was written with PHP, Ruby, Python in mind - none of that 
+Angular.backbone-js.responsive stuff.  For a single-page web-app, you should really 
+consider investigating one of those cooler, hipster options.  But, for a large 
+website or SaSS platform, Emory could save you quite a bit of time.
+
+Emory takes this pattern and attempts to drive it by using unique attributes on 
+various DOM elements.  Here's an example:
+
+```html
+<div class="form-container" id="user-edit">
+  <!-- Place this in a partial -->
+  <form 
+    id="user-edit-form"
+    method="POST"
+    action="/user/update"
+    emory-ajax
+    emory-loading-target="#user-update"
+    emory-alert-target="#user-update"
+    emory-ajax-transition="fade"
+    emory-ajax-preview-hide-target="#user-edit-form"
+    emory-ajax-view-useredit-replace-target="#user-edit-form">
+    <div class="row">
+      <div class="small-12 large-6 columns">
+        <input type="text" name="name" value="{{name}}" placeholder="Your Name (required)" />
+      </div>
+      <div class="small-12 large-6 columns">
+        <input type="text" name="email" value="{{email}}" placeholder="Email Address (required)" />
+      </div>
+    </div>
+    <div class="row">
+      <div class="small-12 columns text-center">
+        <a 
+          href="#"
+          emory-click-submit >
+          Update Information
+        </a>
+      </div>
+    </div>
+  </form>
+  <!-- End partial -->
+</div>
+```
+
+These attributes enable Emory to completely drive the request cycle:
+
+- `emory-ajax` indicates that this should be an AJAX request.
+- `emory-loading-target` specifies which jQUery selector should have the 
+`emory-loading` class while the request is processing.
+- `emory-alert-target` is the jQuery selector for any errors or messages returned 
+by the request.
+- `emory-ajax-transition` indiciates that all DOM hiding/showing should be done with jQuery's fade().
+- `emory-ajax-preview-hide-target` will hide the entire form upoon completion of 
+a successful request.
+- `emory-ajax-view-useredit-replace-target` takes `#user-edit-form` and replaces it with HTML 
+returned from the request with the key `useredit`.
+- `emory-click-submit` submits the form when the link is clicked.
+
+
 ##Default Bindings
 
 All Emory functions are bound to attributes that start with "emory-" by default.
@@ -16,6 +85,7 @@ you prefer.
 Only initialize Emory once.  You can pass the following to override defaults.
 
 - **attributePrefix** : String prefix for all attributes, default is "emory-".
+	- Note: Emory will NOT automatically append "-" to your prefix, you have to specify it.
 - **checkResponseSuccess** : `function (response)` : Should return true or false depending on response.
 	- Used to strictly check if a request was successful.  If not, Emory will attempt to present the error message from getResponseErrorString.
 - **getResponseErrorString** : `function (response)` : Should return a plaintext string of an error if one occurred.
@@ -27,6 +97,44 @@ Only initialize Emory once.  You can pass the following to override defaults.
 - **generateAlertHtml** : `function (text, type)` : Should return HTML for an alert message.
 	- Types can be "error" and "success".  
 	- Wrapper element must have attribute "emory-alert"
+
+In most cases you can get away with just running this after jQuery is ready:
+
+```javascript
+$(function() {
+  var emory = new Emory();
+});
+```
+
+As an example, if you wanted to use a unique attribute prefix and check responses 
+differently, you could initialize this way:
+
+```javascript
+$(function() {
+  var emory = new Emory({
+    attributePrefix: "funky-ajax-prefix-",
+    checkResponseSuccess: function (response) {
+      if( typeof response !== "undefined" &&
+          typeof response.status !== "undefined" &&
+          response.status === "success" ) {
+          return true;
+      }
+      return false;
+    }
+  });
+});
+```
+
+Your element attributes would then look like this:
+
+```html
+<a 
+  href="#" 
+  funky-ajax-prefix-click-submit="true" 
+  funky-ajax-prefix-submit-action="/some/post/target">
+  Submit Form
+</a>
+```
 
 ##Form Attributes
 

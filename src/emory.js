@@ -270,6 +270,13 @@ Emory.prototype._handleFormSubmit = function ($initiator) {
     $form = $initiator;
   }
 
+  // Ensure that this form isn't currently being submitted.
+  if( typeof $form.attr(_emory._attributePrefix + '-submitting-hold') !== "undefined" ) {
+    return;
+  }
+
+  $form.attr(_emory._attributePrefix + '-submitting-hold',"true");
+
   // Apply "emory-loading"
   if( $form.attr(_emory._attributePrefix + "loading-target") ) {
     $($form.attr(_emory._attributePrefix + "loading-target")).addClass(
@@ -477,6 +484,9 @@ Emory.prototype._handleFormAjaxFailure = function ($form, message) {
     );
   }
 
+  // Allow form to be submitted again.
+  $form.removeAttr(_emory._attributePrefix + '-submitting-hold');
+
   return _emory._addAlert($form, message, 'error');
 }
 
@@ -512,6 +522,9 @@ Emory.prototype._handleFormAjaxComplete = function ($form, response) {
     if( ! error.length ) {
       error = "An unknown error has occurred.";
     }
+
+    // Allow form to be submitted again.
+    $form.removeAttr(_emory._attributePrefix + '-submitting-hold');
 
     return _emory._addAlert(
       $form, 
@@ -749,6 +762,9 @@ Emory.prototype._ajaxCompleteShowMessage = function ($form, response) {
 // Callback
 Emory.prototype._ajaxCompleteCallback = function ($form, response) {
   var _emory = this;
+
+  // Allow form to be submitted again.
+  $form.removeAttr(_emory._attributePrefix + '-submitting-hold');
 
   if( typeof $form.attr(_emory._attributePrefix + 'ajax-callback') === "undefined" ) {
     return;
