@@ -16,10 +16,14 @@ having to write brainless Javascript to run their AJAX'd pages.  I found that
 - Format : Create some DOM elements based on the returned data.
 - Display : Animate hiding and showing various elements of the page to reveal the new information.
 
-Emory was written with PHP, Ruby, Python in mind - none of that 
-Angular.backbone-js.responsive stuff.  For a single-page web-app, you should really 
-consider investigating one of those cooler, hipster options.  But, for a large 
-website or SaSS platform, Emory could save you quite a bit of time.
+Emory was written with PHP, Ruby, and Python in mind - specifically, traditional 
+REST-based web services that frequently follow a pattern of POST, Query, Format, 
+and Return.  If you're writing a multi-page web application that wants to handle 
+various requests with either AJAX or a traditional form submission, Emory would 
+probably save you a lot of work.  However, if you're writing a more complex, 
+single-page or websocket-based application that wants to show realtime changes 
+in information, you would be better off with something like Ember, Backbone, 
+Angular, etc.
 
 Emory takes this pattern and attempts to drive it by using unique attributes on 
 various DOM elements.  Here's an example:
@@ -37,6 +41,7 @@ various DOM elements.  Here's an example:
     emory-ajax-transition="fade"
     emory-ajax-preview-hide-target="#user-edit-form"
     emory-ajax-view-useredit-replace-target="#user-edit-form">
+    <input type="hidden" name="id" value="{{id}}" />
     <div class="row">
       <div class="small-12 large-6 columns">
         <input type="text" name="name" value="{{name}}" placeholder="Your Name (required)" />
@@ -62,7 +67,7 @@ various DOM elements.  Here's an example:
 These attributes enable Emory to completely drive the request cycle:
 
 - `emory-ajax` indicates that this should be an AJAX request.
-- `emory-loading-target` specifies which jQUery selector should have the 
+- `emory-loading-target` specifies which jQuery selector should have the 
 `emory-loading` class while the request is processing.
 - `emory-alert-target` is the jQuery selector for any errors or messages returned 
 by the request.
@@ -73,6 +78,38 @@ a successful request.
 returned from the request with the key `useredit`.
 - `emory-click-submit` submits the form when the link is clicked.
 
+As an example, the end-point located at `/user/update` would return a JSON response 
+similar to this:
+
+```json
+{
+  "success": true,
+  "error": false,
+  "message": false,
+  "callback_url": false,
+  "data": {
+    "user": {
+      "id": 54321,
+      "name": "Joe User",
+      "email": "joe@some.user"
+    },
+    "views": {
+      "useredit": "<form  id=\"user-edit-form\" method=\"POST\" action=\"/user/update\" emory-ajax emory-loading-target=\"#user-update\" emory-alert-target=\"#user-update\" emory-ajax-transition=\"fade\" emory-ajax-preview-hide-target=\"#user-edit-form\" emory-ajax-view-useredit-replace-target=\"#user-edit-form\"> <input type=\"hidden\" name=\"id\" value=\"54321\" /> <div class=\"row\"> <div class=\"small-12 large-6 columns\"> <input type=\"text\" name=\"name\" value=\"Joe User\" placeholder=\"Your Name (required)\" /> </div> <div class=\"small-12 large-6 columns\"> <input type=\"text\" name=\"email\" value=\"joe@some.user\" placeholder=\"Email Address (required)\" /> </div> </div> <div class=\"row\"> <div class=\"small-12 columns text-center\"> <a  href=\"#\" emory-click-submit > Update Information </a> </div> </div> </form>"
+    }
+  }
+}
+```
+
+Notice that the HTML returned above is strikingly similar to the original form 
+HTML.  The goal of this particular form was to update a user's information, and 
+upon completion, reload the form with the updated user information in the form 
+fields.
+
+Emory will see the tag `emory-ajax-view-useredit-replace-target`, find the view 
+HTML with the key "useredit" in the JSON response, and then replace whatever
+jQuery can find with `#user-edit-form`.  This creates a simple pattern that can 
+become quite powerful when used in conjunction with multiple views to represent 
+different states.
 
 ##Default Bindings
 
@@ -85,16 +122,26 @@ you prefer.
 Only initialize Emory once.  You can pass the following to override defaults.
 
 - **attributePrefix** : String prefix for all attributes, default is "emory-".
-	- Note: Emory will NOT automatically append "-" to your prefix, you have to specify it.
-- **checkResponseSuccess** : `function (response)` : Should return true or false depending on response.
-	- Used to strictly check if a request was successful.  If not, Emory will attempt to present the error message from getResponseErrorString.
-- **getResponseErrorString** : `function (response)` : Should return a plaintext string of an error if one occurred.
+	- Note: Emory will NOT automatically append "-" to your prefix, you have to 
+  specify it.
+- **checkResponseSuccess** : `function (response)` : Should return true or false 
+depending on response.
+	- Used to strictly check if a request was successful.  If not, Emory will 
+  attempt to present the error message from getResponseErrorString.
+- **getResponseErrorString** : `function (response)` : Should return a plaintext 
+string of an error if one occurred.
 	- This should return an empty string if there is no error.
-- **getResponseMessageString** : `function (response)` : Should return a plaintext string of a message if one was received.
+- **getResponseMessageString** : `function (response)` : Should return a plaintext 
+string of a message if one was received.
 	- This should return an empty string if there is no message.
-- **getResponseViewHtml** : `function (response, name)` : Should return the HTML for a view with key "name".
-- **getResponseCallbackUrl** : `function (response)` : Should return a URL to redirect to if present in response, "" otherwise.
-- **generateAlertHtml** : `function (text, type)` : Should return HTML for an alert message.
+- **getResponseViewHtml** : `function (response, name)` : Should return the HTML 
+for a view with key "name".
+- **getResponseCallbackUrl** : `function (response)` : Should return a URL to 
+redirect to if present in response, "" otherwise.
+  - If a callback URL is returned in a request, Emory will skip all other AJAX 
+  steps and simply redirect the user to that page.
+- **generateAlertHtml** : `function (text, type)` : Should return HTML for an 
+alert message.
 	- Types can be "error" and "success".  
 	- Wrapper element must have attribute "emory-alert"
 
